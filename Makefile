@@ -11,7 +11,7 @@ docs:
 
 build:
 	@mkdir -p $(DIST_DIR)
-	@VSTR=$$(scripts/compute-version.sh); \
+	@if [ -z "$$VERSION_STR" ]; then VSTR=$$(scripts/compute-version.sh); else VSTR="$$VERSION_STR"; fi; \
 	 echo "Embedding version: $$VSTR"; \
 	 $(GO) build -trimpath -ldflags "-s -w -X envseed/internal/version.Version=$$VSTR" -o $(DIST_DIR)/$(BIN_NAME) $(CMD_PKG)
 	@scripts/verify-version-format.sh

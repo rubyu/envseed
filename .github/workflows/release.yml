@@ -26,17 +26,22 @@ jobs:
             echo "Tag is not on main; aborting release." >&2
             exit 1
           fi
+      - name: Compute version once
+        run: echo "VERSION_STR=$(scripts/compute-version.sh)" >> "$GITHUB_ENV"
       - name: Build binary
         env:
           CGO_ENABLED: '0'
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          VERSION_STR: ${{ env.VERSION_STR }}
         run: |
           VERSION="${GITHUB_REF_NAME}"
           echo "Building envseed ${VERSION} for ${GOOS}/${GOARCH}"
           mkdir -p dist
           make build
       - name: Verify stable version format
+        env:
+          VERSION_STR: ${{ env.VERSION_STR }}
         run: scripts/verify-version-release.sh
       - name: Package
         env:
