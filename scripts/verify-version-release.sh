@@ -7,8 +7,19 @@ if [[ ! -x "$BIN" ]]; then
   exit 1
 fi
 
-host_os=$(go env GOOS 2>/dev/null || uname | tr '[:upper:]' '[:lower:]')
-host_arch=$(go env GOARCH 2>/dev/null || uname -m)
+uname_s=$(uname -s)
+case "$uname_s" in
+  Linux)  host_os=linux ;;
+  Darwin) host_os=darwin ;;
+  *)      host_os=$(printf '%s' "$uname_s" | tr '[:upper:]' '[:lower:]') ;;
+esac
+uname_m=$(uname -m)
+case "$uname_m" in
+  x86_64|amd64) host_arch=amd64 ;;
+  aarch64|arm64) host_arch=arm64 ;;
+  i386|i686) host_arch=386 ;;
+  *) host_arch=$uname_m ;;
+esac
 build_os="${GOOS:-$host_os}"
 build_arch="${GOARCH:-$host_arch}"
 
