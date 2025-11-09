@@ -11,7 +11,10 @@ docs:
 
 build:
 	@mkdir -p $(DIST_DIR)
-	$(GO) build -o $(DIST_DIR)/$(BIN_NAME) $(CMD_PKG)
+	@VSTR=$$(scripts/compute-version.sh); \
+	 echo "Embedding version: $$VSTR"; \
+	 $(GO) build -trimpath -ldflags "-s -w -X envseed/internal/version.Version=$$VSTR" -o $(DIST_DIR)/$(BIN_NAME) $(CMD_PKG)
+	@scripts/verify-version-format.sh
 
 test:
 	$(GO) test ./...
@@ -56,3 +59,10 @@ pre-commit: docs check check-evt test test-sandbox test-integration
 
 clean:
 	rm -rf $(DIST_DIR)
+
+.PHONY: verify-version-format verify-version-release
+verify-version-format:
+	@scripts/verify-version-format.sh
+
+verify-version-release:
+	@scripts/verify-version-release.sh
