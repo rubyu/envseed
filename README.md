@@ -14,7 +14,6 @@
 > until it’s gone—and the nightmare begins.”
 
 ---
-
 EnvSeed is a small command-line utility that reconstructs `.env` files from `.envseed*` templates. It helps you generate `.env` files safely and reproducibly, while keeping the seed templates securely stored. Placeholders in the templates are resolved via the `pass` command, and context-aware escaping ensures secrets are written safely.
 
 ## Demo
@@ -132,6 +131,12 @@ Notes
 - When `--output` is omitted, the template filename must contain `envseed` (validate is exempt).
 - In non–dry-run, rendered content is not printed to stdout. Writes are atomic and final permissions are `0600`.
 - Diff and dry-run display masked content only.
+
+## CI Status
+| Branch  | Status |
+|--------|--------|
+| main   | [![CI - main](https://github.com/rubyu/envseed/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rubyu/envseed/actions/workflows/ci.yml?query=branch%3Amain) |
+| develop| [![CI - develop](https://github.com/rubyu/envseed/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/rubyu/envseed/actions/workflows/ci.yml?query=branch%3Adevelop) |
 
 ## CLI Reference
 For the full CLI reference (commands, flags, path resolution, exit codes, template language, and security), see:

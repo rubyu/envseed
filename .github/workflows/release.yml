@@ -15,10 +15,17 @@ jobs:
         goos: [linux, darwin]
         goarch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with:
-          go-version: '1.25.x'
+          go-version-file: go.mod
+      - name: Verify tag commit is on main
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          if ! git branch -r --contains "$GITHUB_SHA" | grep -q "origin/main"; then
+            echo "Tag is not on main; aborting release." >&2
+            exit 1
+          fi
       - name: Build binary
         env:
           CGO_ENABLED: '0'
@@ -28,12 +35,19 @@ jobs:
           VERSION="${GITHUB_REF_NAME}"
           echo "Building envseed ${VERSION} for ${GOOS}/${GOARCH}"
           mkdir -p dist
-          go build -trimpath -ldflags "-s -w" -o envseed ./cmd/envseed
-          TARBALL="envseed_${VERSION}_${GOOS}_${GOARCH}.tar.gz"
-          tar -czf "$TARBALL" envseed
+          make build
+      - name: Verify stable version format
+        run: scripts/verify-version-release.sh
+      - name: Package
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          TARBALL="envseed_${GITHUB_REF_NAME}_${GOOS}_${GOARCH}.tar.gz"
+          tar -czf "$TARBALL" -C dist envseed
           mv "$TARBALL" dist/
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: envseed_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz
           path: dist/envseed_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz
@@ -46,7 +60,7 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: envseed_*
           merge-multiple: true
@@ -57,7 +71,7 @@ jobs:
           sha256sum *.tar.gz > SHA256SUMS.txt
           cat SHA256SUMS.txt
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe
         with:
           draft: false
           prerelease: false
