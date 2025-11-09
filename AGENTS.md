@@ -23,7 +23,6 @@
 - **Unless otherwise specified, all documents and code comments must be written in English.**
 
 ### Development Policy
-- The product has not been released yet, so backward compatibility will not be considered - make thorough and breaking changes as needed.
 - All development activities must follow the rules and guidelines described in CONTRIBUTING.md.
 
 ### Shell Rules
