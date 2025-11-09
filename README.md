@@ -10,7 +10,7 @@
 
 > “They call it `.env`—a cursed thing.  
 > Everyone owns one, everyone depends on it, every moment of their lives.  
-> Yet they toss it aside, never thinking what would happen…  
+> Yet they scatter it everywhere, never thinking what would happen…  
 > until it’s gone—and the nightmare begins.”
 
 ---
