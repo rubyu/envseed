@@ -1,0 +1,7 @@
+.idea/
+
+dist/
+
+review*.md
+plan*.md
+_pass_repo/

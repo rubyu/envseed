@@ -1,0 +1,10 @@
+{
+  "name": "Deployment Dev Container",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "developer",
+  "initializeCommand": "",
+  "postCreateCommand": "bash /workspace/.devcontainer/post-create.sh",
+  "postStartCommand": "git config --global --add safe.directory /workspace"
+}

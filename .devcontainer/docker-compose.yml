@@ -1,0 +1,38 @@
+services:
+  app:
+    hostname: "envseed-dev"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        TZ: ${TZ:-Asia/Tokyo}
+        GIT_DELTA_VERSION: 0.18.2
+        ZSH_IN_DOCKER_VERSION: 1.2.0
+    volumes:
+      - ../:/workspace
+      - envseed-dev-bashhistory:/commandhistory
+      - envseed-dev-claude-config:/home/developer/.claude
+      - envseed-dev-codex-config:/home/developer/.codex
+      - envseed-dev-go-cache:/home/developer/go/pkg/mod
+      - envseed-dev-uv-cache:/home/developer/.cache/uv
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - POWERLEVEL9K_DISABLE_GITSTATUS=true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    security_opt:
+      - seccomp=unconfined
+    command: sleep infinity
+    networks:
+      - envseed-dev-network
+volumes:
+  envseed-dev-bashhistory:
+  envseed-dev-claude-config:
+  envseed-dev-codex-config:
+  envseed-dev-go-cache:
+  envseed-dev-uv-cache:
+
+networks:
+  envseed-dev-network:
+    driver: bridge
