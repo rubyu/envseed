@@ -130,16 +130,21 @@ func renderAssignment(assign *ast.Assignment, resolver Resolver) (string, bool, 
 		return "", false, fmt.Errorf("line %d: unsupported operator", assign.Line)
 	}
 
-	for _, tok := range assign.ValueTokens {
+	emittedAny := false
+	for i, tok := range assign.ValueTokens {
 		switch tok.Kind {
 		case ast.ValueLiteral:
 			b.WriteString(tok.Text)
+			if tok.Text != "" {
+				emittedAny = true
+			}
 		case ast.ValuePlaceholder:
 			secret, err := resolver.Resolve(tok.Path)
 			if err != nil {
 				return "", false, fmt.Errorf("line %d: resolve %q: %w", assign.Line, tok.Path, err)
 			}
-			rendered, dangerous, err := renderSecret(assign, tok, resolver, secret)
+			atStart := !emittedAny && i == 0 || !emittedAny
+			rendered, dangerous, err := renderSecret(assign, tok, resolver, secret, atStart)
 			if err != nil {
 				return "", false, err
 			}
@@ -147,6 +152,9 @@ func renderAssignment(assign *ast.Assignment, resolver Resolver) (string, bool, 
 				dangerousBypassUsed = true
 			}
 			b.WriteString(rendered)
+			if rendered != "" {
+				emittedAny = true
+			}
 		default:
 			return "", false, fmt.Errorf("line %d: unknown token kind", assign.Line)
 		}
@@ -158,7 +166,7 @@ func renderAssignment(assign *ast.Assignment, resolver Resolver) (string, bool, 
 	return b.String(), dangerousBypassUsed, nil
 }
 
-func renderSecret(assign *ast.Assignment, tok ast.ValueToken, resolver Resolver, secret string) (string, bool, error) {
+func renderSecret(assign *ast.Assignment, tok ast.ValueToken, resolver Resolver, secret string, atStart bool) (string, bool, error) {
 	mods := modifierSet(tok.Modifiers)
 	var observer renderObserver
 	if rec, ok := resolver.(renderObserver); ok {
@@ -205,7 +213,7 @@ func renderSecret(assign *ast.Assignment, tok ast.ValueToken, resolver Resolver,
 		}
 		return rendered, false, nil
 	case ast.ContextBare:
-		rendered, err := renderBare(secret, mods, assign.Line, tok.Column, tok.Path)
+		rendered, err := renderBare(secret, mods, assign.Line, tok.Column, tok.Path, atStart)
 		if err != nil {
 			return "", false, err
 		}
@@ -285,13 +293,13 @@ func renderSingleQuoted(secret string, mods map[string]bool, line, column int, p
 	}
 	return secret, nil
 }
-func renderBare(secret string, mods map[string]bool, line, column int, path string) (string, error) {
+func renderBare(secret string, mods map[string]bool, line, column int, path string, atStart bool) (string, error) {
 	if mods["allow_newline"] {
 		return "", newPlaceholderError(line, column, path, "EVE-105-504", "allow_newline modifier is not supported in bare context")
 	}
 	allowTab := mods["allow_tab"]
-	base64Mod := mods["base64"]
 	var b strings.Builder
+	first := atStart
 	for _, r := range secret {
 		switch {
 		case r == '\n' || r == '\r':
@@ -300,16 +308,19 @@ func renderBare(secret string, mods map[string]bool, line, column int, path stri
 			if !allowTab {
 				return "", newPlaceholderError(line, column, path, "EVE-105-502", "TAB not permitted in bare placeholder")
 			}
-			b.WriteByte('\\')
+			// allow_tab: emit TAB as-is
 			b.WriteRune(r)
 		default:
 			if isControlRune(r) {
 				return "", newPlaceholderError(line, column, path, "EVE-105-503", "control character U+%04X not permitted in bare placeholder", r)
 			}
-			if shouldEscapeBare(r, base64Mod) {
+			if shouldEscapeBare(r, first) {
 				b.WriteByte('\\')
 			}
 			b.WriteRune(r)
+		}
+		if first {
+			first = false
 		}
 	}
 	return b.String(), nil
@@ -443,18 +454,12 @@ func isStripWhitespace(r rune) bool {
 	}
 }
 
-func shouldEscapeBare(r rune, base64Mod bool) bool {
-	if base64Mod {
-		switch r {
-		case '+', '/', '=':
-			return false
-		}
-	}
-	if isBareRune(r) {
-		return false
-	}
+func shouldEscapeBare(r rune, atStart bool) bool {
 	switch r {
-	case ' ', '\t', '#', '$', '"', '\'', '`', '\\', '(', ')', '{', '}', '[', ']', '|', '&', ';', '<', '>', '*', '?', '!', '~':
+	case ' ', '#', '$', '"', '\'', '`', '\\', '(', ')', '{', '}', '[', ']', '|', '&', ';', '<', '>':
+		return true
+	}
+	if atStart && r == '~' {
 		return true
 	}
 	return false

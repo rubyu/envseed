@@ -122,7 +122,7 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 			template: "VALUE=<pass:secret|allow_tab>\n",
 			resolver: externalResolver{"secret": "tab\tvalue"},
 			checks: []checkFn{
-				requireContains("VALUE=tab\\\tvalue"),
+				requireContains("VALUE=tab\tvalue"),
 			},
 		},
 		{

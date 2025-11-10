@@ -18,15 +18,15 @@ This document describes the envseed command line interface in detail: commands, 
 - `version` — Print the EnvSeed version string.
 
 ### General Rules
-- `sync`/`diff`/`validate` require a readable `<INPUT_FILE>`. `version` accepts no input file or additional flags. Stdin is not supported.
-- When `--output` is omitted, `sync` and `diff` require `<INPUT_FILE>` to contain `envseed` in its file name (validate is exempt).
+- `sync`/`diff`/`validate` can omit `[INPUT_FILE]`. If omitted, envseed uses `./.envseed` as the input file. `version` accepts no input file. Stdin is not supported.
+- When `--output` is omitted, the input file name must contain `envseed` (validate is exempt).
 - Rendered secrets are never printed to stdout. Informational messages go to stderr and can be suppressed with `--quiet`.
 - `--version` (global): Recognized at any position. Prints exactly one line containing the version string to stdout and exits `0`; ignores other flags/args and does not write to stderr.
 - Unknown or missing commands return exit `101`.
 - Unsupported option combinations return exit `101`.
 
 ## Path Resolution
-1) Choose candidate: use `--output` when provided; otherwise replace the first `envseed` in `<INPUT_FILE>` with `env` to form the candidate path.
+1) Choose candidate: use `--output` when provided; otherwise replace the first `envseed` in the input path (the explicit `INPUT_FILE`, or `./.envseed` when omitted) with `env` to form the candidate path.
 2) Interpret directories: if the candidate ends with a path separator or resolves to an existing directory, join the derived file name (`envseed` → `env`).
 3) Validate path: a missing parent directory returns exit `106`. If the candidate resolves to an existing directory (treating a directory as a file), return exit `101`. Non‑existent files are valid targets.
 
@@ -35,7 +35,7 @@ This document describes the envseed command line interface in detail: commands, 
 
 ```
 ╔════════════════════════════════════════════════════╗
-║ envseed  sync  [flags]  <INPUT_FILE>               ║
+║ envseed  sync  [flags]  [INPUT_FILE]               ║
 ║          ────                                      ║
 ╚════════════════════════════════════════════════════╝
 ```
@@ -53,13 +53,13 @@ Render the template and write the output file.
 - If content changes: `wrote <path> (mode 0600)` is printed to stderr.
 - If content is unchanged: `wrote <path> (unchanged)` is printed to stderr.
 - In non‑dry‑run, rendered content is not printed to stdout.
-- Dry‑run details: The first line is `target: <absolute effective output path>`. The path is computed by OS‑level absolutization without resolving symbolic links. Stdout contains only this header and redacted content; informational logs go to stderr (suppressed by `--quiet`). The effective target path resolves exactly as a real write would (including `--output`), per spec/07-cli.md §7.5.
+- Dry‑run details: The first line is `target: <absolute output path>`. The path is computed by OS‑level absolutization without resolving symbolic links. Stdout contains only this header and redacted content; informational logs go to stderr (suppressed by `--quiet`). The target path resolves exactly as a real write would (including `--output`).
 
 ### diff
 
 ```
 ╔════════════════════════════════════════════════════╗
-║ envseed  diff  [flags]  <INPUT_FILE>               ║
+║ envseed  diff  [flags]  [INPUT_FILE]               ║
 ║          ────                                      ║
 ╚════════════════════════════════════════════════════╝
 ```
@@ -71,8 +71,8 @@ Render in memory and print a redacted unified diff.
 
 #### Behavior
 - If the target does not exist, compare against empty content (all additions).
-- When `--output` names a directory, envseed derives the comparison file inside that directory by replacing the first `envseed` in `<INPUT_FILE>` with `env`; otherwise it compares against the exact path provided.
-- Unified diff with `---`, `+++`, and `@@` hunk markers and context lines. Unified diff headers use the first two lines `--- <path>` and `+++ <path>`, where each `<path>` is the absolute effective output path and both paths are byte‑identical. EnvSeed does not add prefixes or annotations. No differences → stdout/stderr remain silent (see spec/07-cli.md §7.8).
+- When `--output` names a directory, envseed derives the comparison file inside that directory by replacing the first `envseed` in the input path (the explicit `INPUT_FILE`, or `./.envseed` when omitted) with `env`; otherwise it compares against the exact path provided.
+- Unified diff with `---`, `+++`, and `@@` hunk markers and context lines. Unified diff headers use the first two lines `--- <path>` and `+++ <path>`, where each `<path>` is the absolute output path and both paths are byte‑identical. EnvSeed does not add prefixes or annotations. No differences → stdout/stderr remain silent.
 - Comparisons larger than 10 MiB are rejected (exit `108`, e.g., `EVE-108-1`).
 - Redaction: diff output is reconstructed from masked A′/B′ per spec/06-security.md §6.3 (Redaction Policy & Algorithm).
 
@@ -82,7 +82,7 @@ Render in memory and print a redacted unified diff.
 ### validate
 ```
 ╔════════════════════════════════════════════════════╗
-║ envseed  validate  [flags]  <INPUT_FILE>           ║
+║ envseed  validate  [flags]  [INPUT_FILE]           ║
 ║          ────────                                  ║
 ╚════════════════════════════════════════════════════╝
 ```
@@ -130,7 +130,7 @@ For detailed rules on placeholders and modifiers, see spec/05-rendering.md and s
 ### Modifiers
 - `allow_newline` — Permit newline characters (double‑quoted or command substitution only).
 - `allow_tab` — Permits literal TAB characters (`U+0009`) in contexts that otherwise reject them. It is required to retain TAB inside single-quoted or backtick placeholders; other control characters remain unsupported.
-- `base64` — Base64‑encode the secret (mutually exclusive with other modifiers).
+ - `base64` — Base64‑encode the secret (must appear alone; cannot be combined with other modifiers).
 - `dangerously_bypass_escape` — Insert the secret verbatim (disables validation; use with caution).
 - `strip` — Remove leading and trailing runs of SPACE/TAB/CR/LF.
 - `strip_left` — Remove leading runs of SPACE/TAB/CR/LF.
@@ -153,7 +153,7 @@ The CLI uses the following exit codes:
 - `108` diff failures
 - `199` unexpected internal exception
 
-In additon, the CLI outputs the corresponding detailed error code follows the form `EVE-<exit>-<sub>`. 
+In addition, the CLI outputs the corresponding detailed error code follows the form `EVE-<exit>-<sub>`. 
 CLI errors are prefixed as: `envseed ERROR [EVE-<exit>-<sub>]: <message>` and optional subsequent lines may include additional details.
 For complete definitions including sub-band allocation within each exit category, see spec/07-cli.md §7.
 

@@ -154,7 +154,7 @@ func TestParse_TrailingCommentPreserved(t *testing.T) {
 
 // [EVT-MGU-1]
 func TestParse_BlankAndCommentElements(t *testing.T) {
-	input := "# comment\n\nEXAMPLE_VAR=bar\n"
+	input := "# comment\n\nEXAMPLE_VAR=staging\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -562,7 +562,7 @@ func TestParse_PlaceholderRejectsNonASCIIWhitespaceBeforeClose(t *testing.T) {
 
 // [EVT-MGU-1]
 func TestParse_AssignmentNameMismatchedBrackets(t *testing.T) {
-	input := "FOO[0=bar\n"
+	input := "APP_NAME[0=staging\n"
 	_, err := parser.Parse(input)
 	expectParseError(t, err, "EVE-103-501")
 }

@@ -27,9 +27,12 @@ func ParseTarget(text string) ([]ast.Element, error) {
 		// Map parser errors (103) into 107-series for target parsing
 		var perr *parser.ParseError
 		if errors.As(err, &perr) {
-			// Non-ASCII whitespace in target context
-			if containsNonASCIIWhitespace(text) {
+			// Specific mappings
+			if perr.DetailCode == "EVE-103-3" {
 				return nil, NewExitError("EVE-107-101").WithErr(err)
+			}
+			if perr.DetailCode == "EVE-103-103" {
+				return nil, NewExitError("EVE-107-1").WithErr(err)
 			}
 			// Unterminated constructs mapping (103-401..404 → 107-201..204)
 			switch perr.DetailCode {
@@ -47,6 +50,11 @@ func ParseTarget(text string) ([]ast.Element, error) {
 		}
 		return nil, NewExitError("EVE-107-205").WithErr(err)
 	}
+
+	// Grammar-level whitespace check: only leading WSP (Space/Tab) is allowed
+	if hasNonASCIIGrammarWhitespace(elems) {
+		return nil, NewExitError("EVE-107-101")
+	}
 	// Reject placeholders in target .env
 	for _, el := range elems {
 		if el.Type != ast.ElementAssignment || el.Assignment == nil {
@@ -59,6 +67,41 @@ func ParseTarget(text string) ([]ast.Element, error) {
 		}
 	}
 	return elems, nil
+}
+
+// hasNonASCIIGrammarWhitespace reports non-ASCII whitespace where grammar-level
+// whitespace is expected (leading indentation WSP for blank/comment/assignment).
+func hasNonASCIIGrammarWhitespace(elems []ast.Element) bool {
+	isAsciiWsp := func(r rune) bool { return r == ' ' || r == '\t' }
+	for _, el := range elems {
+		switch el.Type {
+		case ast.ElementBlank:
+			for _, r := range el.Text { // leading WSP before EOL
+				if r == '\n' || r == '\r' {
+					break
+				}
+				if !isAsciiWsp(r) && unicode.IsSpace(r) {
+					return true
+				}
+			}
+		case ast.ElementComment:
+			for _, r := range el.Text { // leading WSP then '#'
+				if r == '#' {
+					break
+				}
+				if !isAsciiWsp(r) && unicode.IsSpace(r) {
+					return true
+				}
+			}
+		case ast.ElementAssignment:
+			for _, r := range el.Assignment.LeadingWhitespace {
+				if !isAsciiWsp(r) && unicode.IsSpace(r) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // MaskEnv returns a masked representation of a rendered .env text using the

@@ -1,6 +1,7 @@
 ## 8. Conformance and Testing
 
 ### 8.1 Deterministic Unit Tests
+- CLI default input handling: Suites MUST include cases where `[INPUT_FILE]` is omitted and the default `./.envseed` is used (success) and missing (exit code 102). Suites MUST also include cases where the selected input name does not contain `envseed` without `--output` (exit code 101) and where `--output` is provided.
 - Parser rules: MUST cover assignment names, arrays, `+=`, comments (whole-line and trailing), and placeholder syntax (unknown/duplicate/empty modifiers, invalid PATH, presence of newline/NUL).
 - Parser rules (sigil strictness): MUST reject any whitespace between `pass` and `:` in `<pass:...>`; diagnostics include line and column (see Sections 4.3 and 4.5).
 - Target parsing: MUST verify that target `.env` files (A/B) follow the same grammar (assignments/comments/blank lines). Lines outside this grammar MUST raise parse errors with line and column. No heuristic masking is permitted on parse failure.

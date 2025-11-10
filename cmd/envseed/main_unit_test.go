@@ -49,15 +49,18 @@ func captureOutput(t *testing.T, fn func()) (string, string) {
 	return stdout, stderr
 }
 
-// [EVT-BCU-1][EVT-BCU-4]
-func TestRunSyncRequiresInputArgument(t *testing.T) {
-	if err := runSync(context.Background(), nil); err == nil {
-		t.Fatal("expected error for missing input argument")
-	} else {
-		var exitErr *envseed.ExitError
-		if !errors.As(err, &exitErr) || exitErr.DetailCode != "EVE-101-201" {
-			t.Fatalf("unexpected error: %v", err)
-		}
+// [EVT-BCU-10][EVT-BIU-6]
+func TestRunSyncDefaultMissingReturnsTemplateRead102(t *testing.T) {
+	dir := t.TempDir()
+	oldwd, _ := os.Getwd()
+	t.Cleanup(func() { _ = os.Chdir(oldwd) })
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	err := runSync(context.Background(), []string{"--dry-run"})
+	var exitErr *envseed.ExitError
+	if !errors.As(err, &exitErr) || exitErr.Code != envseed.ExitTemplateRead {
+		t.Fatalf("expected ExitTemplateRead(102), got: %v", err)
 	}
 }
 
@@ -65,7 +68,7 @@ func TestRunSyncRequiresInputArgument(t *testing.T) {
 func TestRunSyncDryRunSuccess(t *testing.T) {
 	dir := t.TempDir()
 	input := filepath.Join(dir, "simple.envseed")
-	if err := os.WriteFile(input, []byte("FOO=bar\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("APP_NAME=staging\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 	stdout, _ := captureOutput(t, func() {
@@ -83,7 +86,7 @@ func TestRunSyncDryRunSuccess(t *testing.T) {
 func TestRunSyncQuietSuppressesInfo(t *testing.T) {
 	dir := t.TempDir()
 	input := filepath.Join(dir, "quiet.envseed")
-	if err := os.WriteFile(input, []byte("FOO=bar\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("APP_NAME=staging\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 	_, stderr := captureOutput(t, func() {
@@ -100,11 +103,11 @@ func TestRunSyncQuietSuppressesInfo(t *testing.T) {
 func TestRunDiffExitCodes(t *testing.T) {
 	dir := t.TempDir()
 	input := filepath.Join(dir, "diff.envseed")
-	if err := os.WriteFile(input, []byte("FOO=bar\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("APP_NAME=staging\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 	output := filepath.Join(dir, "diff.env")
-	if err := os.WriteFile(output, []byte("FOO=baz\n"), 0o600); err != nil {
+	if err := os.WriteFile(output, []byte("APP_NAME=production\n"), 0o600); err != nil {
 		t.Fatalf("write output: %v", err)
 	}
 	stdout, _ := captureOutput(t, func() {
@@ -117,7 +120,7 @@ func TestRunDiffExitCodes(t *testing.T) {
 	if !strings.Contains(stdout, "---") {
 		t.Fatalf("expected unified diff in stdout, got %q", stdout)
 	}
-	if err := os.WriteFile(output, []byte("FOO=bar\n"), 0o600); err != nil {
+	if err := os.WriteFile(output, []byte("APP_NAME=staging\n"), 0o600); err != nil {
 		t.Fatalf("rewrite output: %v", err)
 	}
 	if err := runDiff(context.Background(), []string{input}); err != nil {
@@ -125,15 +128,18 @@ func TestRunDiffExitCodes(t *testing.T) {
 	}
 }
 
-// [EVT-BCU-1][EVT-BCU-4][EVT-BDU-1]
-func TestRunValidateArgumentChecks(t *testing.T) {
-	if err := runValidate(context.Background(), nil); err == nil {
-		t.Fatal("expected error for missing input")
-	} else {
-		var exitErr *envseed.ExitError
-		if !errors.As(err, &exitErr) || exitErr.DetailCode != "EVE-101-201" {
-			t.Fatalf("unexpected error: %v", err)
-		}
+// [EVT-BCU-10][EVT-BDU-1]
+func TestRunValidateDefaultMissingIs102(t *testing.T) {
+	dir := t.TempDir()
+	oldwd, _ := os.Getwd()
+	t.Cleanup(func() { _ = os.Chdir(oldwd) })
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	err := runValidate(context.Background(), nil)
+	var exitErr *envseed.ExitError
+	if !errors.As(err, &exitErr) || exitErr.Code != envseed.ExitTemplateRead {
+		t.Fatalf("expected ExitTemplateRead(102), got: %v", err)
 	}
 	var req exitRequest
 	if !errors.As(runValidate(context.Background(), []string{"-h"}), &req) || req.code != envseed.ExitOK {
@@ -145,7 +151,7 @@ func TestRunValidateArgumentChecks(t *testing.T) {
 func TestRunValidateSuccess(t *testing.T) {
 	dir := t.TempDir()
 	input := filepath.Join(dir, "validate.envseed")
-	if err := os.WriteFile(input, []byte("BAR=value\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("APP_NAME=staging\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 	if err := runValidate(context.Background(), []string{input}); err != nil {

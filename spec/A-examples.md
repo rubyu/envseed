@@ -6,7 +6,7 @@ This appendix provides ready-to-use fixtures grouped by context and purpose. Unl
 
 ### A.1 Conventions
 - Success examples indicate that `parse -> render -> parse` succeeds; when possible, `bash -n` also succeeds.
- - Failure examples indicate the error category (classified with a unique subcode) or a parse error; guidance refers to Section 5.4.1.
+- Failure examples indicate the error category (classified with a unique subcode) or a parse error; guidance refers to Section 5.4.1.
 
 ### A.2 Bare Context (`VAR=<pass:...>`)
 Status: Success (exit code 0)
@@ -239,4 +239,4 @@ Note:
 - Redaction replaces only string segments with `*` while preserving syntactic delimiters and line boundaries.
 - Expected: `envseed diff` returns exit 1 on differences (see Section 7.10, Exit Codes).
 
- - The following illustrates expected diff shape. For normative header and body rules, see Section 7.8.
+- The following illustrates expected diff shape. For normative header and body rules, see Section 7.8.

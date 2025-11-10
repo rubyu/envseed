@@ -1,4 +1,7 @@
 ## 7. CLI Contract
+
+
+
 ### 7.1 Global CLI Behavior
 - In non-dry-run execution, see Section 6.4 for stream and logging policy. The CLI MUST adhere to those rules.
 - Informational messages and diagnostics MUST be printed to stderr. With `--quiet`, informational messages are suppressed; errors are not.
@@ -14,37 +17,41 @@ Note: See Section 5.2 for `dangerously_bypass_escape` semantics; security consid
 
 ### 7.3 Arguments
 ```
-envseed <command> [flags] <INPUT_FILE>
+envseed <command> [flags] [INPUT_FILE]
 ```
 
 #### 7.3.1 Input File Requirements
-- `<INPUT_FILE>` MUST be provided for `sync`, `diff`, and `validate`. The `version` subcommand MUST NOT accept an input file.
-- `<INPUT_FILE>` MUST be a path to a file. The file MUST be readable, and MUST be formatted in the template format (see Section 4).
+- `INPUT_FILE` MAY be omitted for `sync`, `diff`, and `validate`. When omitted, the CLI MUST use the file named `.envseed` in the current working directory as the selected input path. The `version` subcommand MUST NOT accept an input file.
+- The selected input MUST be a readable regular file encoded in the template format (see Section 4). Failures to access the selected input (existence/type/structure/permission/open/read) MUST be classified under exit code 102 with subcodes defined in Section 7.10.1.
 - File name rules: see Section 7.5 (derivation and directory semantics). This requirement does not apply to `validate`.
 - Reading from stdin MUST NOT be supported.
 
+For definitions of path terminology used in this chapter, see Section 1.3.
+
 ### 7.4 Common Options
-- `--output`, `-o` `<PATH>` (sync, diff): specify write/compare destination. If omitted, replace the first occurrence of `envseed` in `<INPUT_FILE>` with `env` to derive the path.
+- `--output`, `-o` `<PATH>` (sync, diff): specify write/compare destination. If omitted, replace the first occurrence of `envseed` in the selected input path with `env` to derive the path.
 - Option combinations: unless a subcommand explicitly lists an unsupported combination, options MUST be combinable. Unsupported combinations MUST return exit code 101 with an explanatory message.
 - `--version` (global): see Section 10.4.
 
 ### 7.5 Path Resolution
-1) Choose candidate: use `--output` when provided; otherwise replace the first `envseed` in `<INPUT_FILE>` with `env` to form the candidate path.
+1) Choose candidate: use `--output` when provided; otherwise replace the first `envseed` in the selected input path with `env` to form the candidate path.
 2) Interpret directories: if the candidate ends with a path separator or resolves to an existing directory, join the derived file name (`envseed` -> `env`).
 3) Validate path: a missing parent directory MUST return exit code 106; a candidate that resolves to an existing directory MUST return exit code 101. Non-existent files are valid targets.
 
-Implementations MUST compute absolute paths when emitting paths (e.g., the `target:` header and unified diff headers), using OS-level absolutization without resolving symbolic links.
+Without `--output`, if the selected input name does not contain `envseed`, implementations MUST return exit code 101. This name requirement applies to `sync` and `diff` only; it does not apply to `validate`.
+Note: This requirement applies only when an explicit input path is provided. When `[INPUT_FILE]` is omitted, the default selection `.envseed` satisfies the name rule by construction.
 
+Implementations MUST compute absolute paths when emitting paths (e.g., the `target:` header and unified diff headers), using OS-level absolutization without resolving symbolic links.
 
 Diagnostics: see Section 7.11 for the canonical display format. The exit codes for the cases below remain as specified.
 
 #### 7.5.1 Path Resolution Properties
-- Across combinations of: whether the input name contains `envseed`; presence or absence of `--output`; whether the candidate ends as a directory, a file, or is non-existent; and presence or absence of a trailing path separator, the following MUST be validated.
-  - Without `--output`: derive the candidate path by replacing the first occurrence of `envseed` in the input name with `env`. If the parent directory does not exist, implementations MUST return exit code 106. If attempting to treat an existing directory as a file, implementations MUST return exit code 101.
+- Across combinations of: whether the selected input name contains `envseed`; presence or absence of `--output`; whether the candidate ends as a directory, a file, or is non-existent; and presence or absence of a trailing path separator, the following MUST be validated.
+  - Without `--output`: derive the candidate path by replacing the first occurrence of `envseed` in the selected input name with `env`. If the parent directory does not exist, implementations MUST return exit code 106. If attempting to treat an existing directory as a file, implementations MUST return exit code 101. If the selected input name does not contain `envseed`, implementations MUST return exit code 101 (name requirement).
   - With `--output`: when the path ends with a separator or resolves to an existing directory, append the derived file name (`envseed` -> `env`); otherwise use the provided path as-is. Any inconsistency MUST be classified under exit code 106 or 101. Subcode assignment follows `docs/errors.md`.
 
 ### 7.6 Target .env Parsing Requirements
-Apply newline and whitespace definitions from Section 1.2 and Appendix D.1.
+Apply newline and whitespace definitions from Appendix D.1, and see Section 1.2 for terminology.
 Parsing MUST follow Appendix D.1–D.3 (same as the template grammar). Target `.env` files do not contain placeholders; only assignments, comments, and blank lines are valid. Non-ASCII whitespace where grammar-level whitespace is expected (Space/Tab-only; see Appendix D.1) MUST cause a parse error (exit code 107). See `docs/errors.md` for subcode mapping.
 Lines that are not assignments, comments, or blank lines (e.g., shell commands such as `export VAR=...`) MUST be rejected as parse errors.
 - If a target `.env` file (A or B) cannot be parsed according to this grammar, processing MUST terminate with a parsing error (see Section 7.10; exit code 107). Fallback or heuristic masking MUST NOT be used.
@@ -61,7 +68,7 @@ Lines that are not assignments, comments, or blank lines (e.g., shell commands s
 
 ### 7.7 sync
 ```
-envseed sync [flags] <INPUT_FILE>
+envseed sync [flags] [INPUT_FILE]
 ```
 Behavior:
 - Read input; resolve output per Section 7.5; fetch secrets via `pass`; render and write the `.env` file.
@@ -78,15 +85,15 @@ Output and streams:
 - See Section 7.1 for output and stream requirements.
 
 Dry-run details:
-- Never write files. Always resolve the effective output path (per Section 7.5) and include it in the report, regardless of whether `--output` is provided. The path MUST be absolute (see Section 7.5 for the definition of absolute path).
-- The first line of the dry-run report MUST be `target: <path>`, where `<path>` is the absolute effective output path resolved per Section 7.5. Implementations MUST NOT add prefixes, quotes, or annotations to `<path>`.
+- Never write files. Always resolve the resolved output path (per Section 7.5) and include it in the report, regardless of whether `--output` is provided. The path MUST be absolute (see Section 7.5 for the definition of absolute path).
+- The first line of the dry-run report MUST be `target: <path>`, where `<path>` is the absolute resolved output path resolved per Section 7.5. Implementations MUST NOT add prefixes, quotes, or annotations to `<path>`.
 - Print a redacted content summary to stdout using the rules in Section 6.3 (masked texts A′/B′). Real secrets MUST NOT be printed.
 
 Example (informative; mask uses `*`):
 ```
 target: /abs/path/to/.env
-FOO=****
-BAR=**********
+API_KEY=****
+PASSWORD=**********
 # Example (informative): with B rendered as `PASSWORD="vP9%cQ\$m*Nqk"`,
 # the masked B′ is `PASSWORD="************"` (no backslashes appear in the masked value).
 ```
@@ -96,7 +103,7 @@ Exit codes:
 
 ### 7.8 diff
 ```
-envseed diff [flags] <INPUT_FILE>
+envseed diff [flags] [INPUT_FILE]
 ```
 Behavior:
 - Render the same content as `sync` in memory. Compute a unified diff on raw A (current file) and raw B (newly rendered), and emit a reconstructed masked unified diff on stdout using A′/B′ from Section 6.3.
@@ -110,7 +117,7 @@ Limits:
 
 Details:
 - If the target file is missing, compare against empty content, resulting in an all-additions diff.
-- The unified diff headers MUST be the first two lines `--- <path>` and `+++ <path>`. Each `<path>` MUST be the absolute output path (see Section 7.5). The two `<path>` values MUST be byte-identical. Implementations MUST NOT add prefixes or annotations to these header paths. Rationale (Informative): enforcing identical header paths improves interoperability and machine readability of unified diffs.
+- The unified diff headers MUST be the first two lines `--- <path>` and `+++ <path>`. Each `<path>` MUST be the absolute resolved output path (see Section 7.5). The two `<path>` values MUST be byte-identical. Implementations MUST NOT add prefixes or annotations to these header paths. Rationale (Informative): enforcing identical header paths improves interoperability and machine readability of unified diffs.
 - The unified diff body MUST select context and deletion lines from A′ and addition lines from B′ using the hunk line numbers from the raw diff. Preserve hunk ordering and metadata. No secret values may appear in the final output.
 - When there are no differences, both stdout and stderr MUST remain silent unless errors occur.
 - Path handling for `--output` MUST follow Section 7.5 (derivation and directory semantics).
@@ -120,10 +127,10 @@ Exit codes:
 
 ### 7.9 validate
 ```
-envseed validate [flags] <INPUT_FILE>
+envseed validate [flags] [INPUT_FILE]
 ```
 Behavior:
-- Perform parsing only. Do not call `pass`. Do not read or write files other than `<INPUT_FILE>`.
+- Perform parsing only. Do not call `pass`. Do not read or write files other than the file at the selected input path.
 
 Options:
 - No additional flags are accepted. Unexpected options MUST return `101`.
@@ -160,7 +167,7 @@ Rationale:
 - Exit codes 1-99 are reserved for future cross-tool alignment. In particular, exit code 1 is reserved for "differences exist" to align with common diff semantics.
 - All non-success, non-diff failures start at 101 to avoid collisions with other tools that may standardize 1-99.
 - Exit code 100 is not used.
- - Note: The reservation above applies to exit codes. Subcodes use bands where B0 is 1..99 within each exit category; this is independent of exit-code reservations.
+- Note: The reservation above applies to exit codes. Subcodes use bands where B0 is 1..99 within each exit category; this is independent of exit-code reservations.
 
 Diagnostic label scheme:
 - The canonical display format and label structure are defined in Section 7.11 (CLI Diagnostics). This section defines exit codes and band classification only.
@@ -169,21 +176,20 @@ Diagnostic label scheme:
 - `diff`: differences return exit code 1; matches return exit code 0. Exit code 1 MUST NOT be used for any other condition.
 - Errors MUST be assigned a unique subcode, and include a clear message, optionally followed by guidance and a documentation link. The canonical subcode mapping (numbering, messages, guidance) is generated from `internal/envseed/errors.go` to `docs/errors.md`. The diagnostic display format is defined in Section 7.11.
 - Render-time failures (exit code 105) MUST include the source position in CLI diagnostics when available: the line number MUST be included; the column MUST be included when tracked. The position MUST be anchored to the offending placeholder token (Section 7.11). Diagnostics MUST NOT reveal secrets.
- - Refusing to overwrite an existing file without `--force` is classified under exit code 106 (Output failure).
+- Refusing to overwrite an existing file without `--force` is classified under exit code 106 (Output failure).
 
 ### 7.10.1 Subcode Bands
 This section defines the band allocation for subcodes within each exit category. Band allocation is Normative. The canonical mapping of individual subcodes (numbers, messages, guidance) is generated from `internal/envseed/errors.go` to `docs/errors.md` (Informative).
 
 - 101 CLI / Input & Path Resolution
-  - EVE-101-B0 (1..99) — Command/flag validation (missing/unknown/extra/unsupported combination)
+  - EVE-101-B0 (1..99) — Command/flag/positionals validation (missing/unknown/unsupported/extra)
   - EVE-101-B1 (101..199) — Input channel (stdin unsupported)
-  - EVE-101-B2 (201..299) — Input file validation (missing/not specified/name requirements)
-  - EVE-101-B3 (301..399) — Path resolution logic (using directory as file, etc.)
+  - EVE-101-B2 (201..299) — Input name requirements (pre-I/O validation)
 
 - 102 Template Read (I/O)
-  - EVE-102-B0 (1..99) — open/read failures
-  - EVE-102-B1 (101..199) — Permission errors
-  - EVE-102-B2 (201..299) — Input path is a directory, etc.
+  - EVE-102-B0 (1..99) — File existence and type validation (ENOENT, EISDIR, ENOTDIR, ELOOP, ENAMETOOLONG)
+  - EVE-102-B1 (101..199) — Permission errors (EACCES, EPERM)
+  - EVE-102-B2 (201..299) — File opening or reading failures (FD exhaustion, transient I/O, generic read)
 
 - 103 Parsing (Parser -> AST)
   - EVE-103-B0 (1..99) — Lexical & sigil constraints (non-ASCII whitespace around placeholder separators `|`, `,`, before `>`, trimming around PATH; whitespace between `pass` and `:`; non-ASCII leading whitespace at line start)

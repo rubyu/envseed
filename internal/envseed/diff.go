@@ -16,7 +16,8 @@ const diffSizeLimit = 10 * (1 << 20)
 // Diff executes the envseed diff workflow.
 func Diff(ctx context.Context, opts DiffOptions) (DiffResult, error) {
 	if opts.InputPath == "" {
-		return DiffResult{}, NewExitError("EVE-101-201")
+		// CLI handles input selection; treat empty as internal misuse
+		return DiffResult{}, NewExitError("EVE-102-203", "<empty>")
 	}
 
 	passClient := opts.PassClient
@@ -29,18 +30,23 @@ func Diff(ctx context.Context, opts DiffOptions) (DiffResult, error) {
 		stdout = os.Stdout
 	}
 
-	data, err := os.ReadFile(opts.InputPath)
+	if info, statErr := os.Lstat(opts.InputPath); statErr != nil {
+		code := classifyStatDetail(statErr)
+		return DiffResult{}, NewExitError(code, opts.InputPath).WithErr(statErr)
+	} else if info.IsDir() {
+		return DiffResult{}, NewExitError("EVE-102-2", opts.InputPath)
+	}
+	f, err := os.Open(opts.InputPath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return DiffResult{}, NewExitError("EVE-101-202", opts.InputPath).WithErr(err)
-		}
 		if errors.Is(err, os.ErrPermission) {
 			return DiffResult{}, NewExitError("EVE-102-101", opts.InputPath).WithErr(err)
 		}
-		if info, statErr := os.Stat(opts.InputPath); statErr == nil && info.IsDir() {
-			return DiffResult{}, NewExitError("EVE-101-302", opts.InputPath).WithErr(err)
-		}
-		return DiffResult{}, NewExitError("EVE-102-1", opts.InputPath).WithErr(err)
+		return DiffResult{}, NewExitError("EVE-102-201", opts.InputPath).WithErr(err)
+	}
+	data, rerr := io.ReadAll(f)
+	_ = f.Close()
+	if rerr != nil {
+		return DiffResult{}, NewExitError("EVE-102-202", opts.InputPath).WithErr(rerr)
 	}
 
 	targetPath, err := resolveOutputPath(opts.InputPath, opts.OutputPath)

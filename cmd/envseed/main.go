@@ -65,7 +65,7 @@ func runSync(ctx context.Context, args []string) error {
 	fs.BoolVar(&quiet, "q", false, "suppress informational output (shorthand)")
 	fs.SetOutput(io.Discard)
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: envseed sync [flags] <INPUT_FILE>\n\nFlags:\n")
+		fmt.Fprintf(os.Stderr, "Usage: envseed sync [flags] [INPUT_FILE]\n\nFlags:\n")
 		fs.SetOutput(os.Stderr)
 		fs.PrintDefaults()
 		fs.SetOutput(io.Discard)
@@ -79,11 +79,14 @@ func runSync(ctx context.Context, args []string) error {
 		return envseed.NewExitError("EVE-101-5", err.Error())
 	}
 
-	if fs.NArg() != 1 {
-		return envseed.NewExitError("EVE-101-201")
+	if fs.NArg() > 1 {
+		return envseed.NewExitError("EVE-101-6")
 	}
 
-	inputPath := fs.Arg(0)
+	inputPath := ".envseed"
+	if fs.NArg() == 1 {
+		inputPath = fs.Arg(0)
+	}
 	if inputPath == "-" {
 		return envseed.NewExitError("EVE-101-101")
 	}
@@ -107,7 +110,7 @@ func runDiff(ctx context.Context, args []string) error {
 	fs.StringVar(&outputPath, "o", "", "override the destination path (shorthand)")
 	fs.SetOutput(io.Discard)
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: envseed diff [flags] <INPUT_FILE>\n\nFlags:\n")
+		fmt.Fprintf(os.Stderr, "Usage: envseed diff [flags] [INPUT_FILE]\n\nFlags:\n")
 		fs.SetOutput(os.Stderr)
 		fs.PrintDefaults()
 		fs.SetOutput(io.Discard)
@@ -121,11 +124,14 @@ func runDiff(ctx context.Context, args []string) error {
 		return envseed.NewExitError("EVE-101-5", err.Error())
 	}
 
-	if fs.NArg() != 1 {
-		return envseed.NewExitError("EVE-101-201")
+	if fs.NArg() > 1 {
+		return envseed.NewExitError("EVE-101-6")
 	}
 
-	inputPath := fs.Arg(0)
+	inputPath := ".envseed"
+	if fs.NArg() == 1 {
+		inputPath = fs.Arg(0)
+	}
 	if inputPath == "-" {
 		return envseed.NewExitError("EVE-101-101")
 	}
@@ -149,7 +155,7 @@ func runValidate(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: envseed validate <INPUT_FILE>\n")
+		fmt.Fprintf(os.Stderr, "Usage: envseed validate [INPUT_FILE]\n")
 	}
 
 	if err := fs.Parse(args); err != nil {
@@ -160,11 +166,14 @@ func runValidate(ctx context.Context, args []string) error {
 		return envseed.NewExitError("EVE-101-5", err.Error())
 	}
 
-	if fs.NArg() != 1 {
-		return envseed.NewExitError("EVE-101-201")
+	if fs.NArg() > 1 {
+		return envseed.NewExitError("EVE-101-6")
 	}
 
-	inputPath := fs.Arg(0)
+	inputPath := ".envseed"
+	if fs.NArg() == 1 {
+		inputPath = fs.Arg(0)
+	}
 	if inputPath == "-" {
 		return envseed.NewExitError("EVE-101-101")
 	}
@@ -211,7 +220,7 @@ func containsVersionFlag(args []string) bool {
 }
 
 func printUsage(w io.Writer) {
-	fmt.Fprintln(w, "Usage: envseed <command> [flags] <INPUT_FILE>")
+	fmt.Fprintln(w, "Usage: envseed <command> [flags] [INPUT_FILE]")
 	fmt.Fprintln(w, "\nCommands:")
 	fmt.Fprintln(w, "  sync      Render a template into its .env target")
 	fmt.Fprintln(w, "  diff      Compare the current .env file with regenerated output")

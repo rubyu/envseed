@@ -33,7 +33,7 @@
 
 ### 5.3 Context Rules and Escaping
 Summary (Informative):
-- Bare — Prohibit: NUL, disallowed control characters, newline (unrepresentable); Allow with modifier: TAB (`allow_tab`); Always escape: SPACE, #, $, ", ', `, \\, (, ), {, }, [, ].
+- Bare — Prohibit: NUL, disallowed control characters, newline (unrepresentable); Allow with modifier: TAB (`allow_tab`) [emitted as‑is]; Always escape: SPACE, #, $, ", ', `, \\, (, ), {, }, [, ], |, &, ;, <, >. Note: A leading `~` in the RHS MUST be escaped (to prevent tilde expansion) or placed into a quoted context.
 - Double-quoted — Prohibit: NUL, disallowed controls; Allow with modifier: TAB (`allow_tab`), newline (`allow_newline`); Always escape: ", \\, $, `.
 - Single-quoted — Prohibit: NUL, controls (other than TAB via modifier), newline, the single quote `'`.
 - Command substitution ($(...)) — Prohibit: NUL, disallowed controls; Allow with modifier: TAB/newline; Always escape: \\, $, placeholder‑originated `)`.
@@ -66,12 +66,12 @@ This table lists the unconditional required escapes. Conditional rules are speci
 
 Implementations MUST NOT introduce escapes beyond (a) the unconditional set in this matrix and (b) the conditional cases explicitly defined in this specification. For any input, the decision is deterministic.
 
-Decision procedure: (1) Prohibitions (e.g., NUL or disallowed control characters) — reject; (2) Unconditional escapes (this matrix) — always escape; (3) Conditional escapes (e.g., placeholder‑originated ')' in $(...), top‑level '#' per Section 4.1). The combination yields a unique result.
+Decision procedure: (1) Prohibitions (e.g., NUL or disallowed control characters) — reject; (2) Unconditional escapes (this matrix) — always escape; (3) Conditional escapes (e.g., placeholder‑originated ')' in $(...), top‑level '#' per Section 4.1, and leading `~` in Bare per Section 5.3.4). The combination yields a unique result.
 
 ```
 Context        Characters that MUST be escaped per Section 5.3.3
 -------------- --------------------------------
-Bare           SPACE, #, $, ", ', `, \, (, ), {, }, [, ]
+Bare           SPACE, #, $, ", ', `, \, (, ), {, }, [, ], |, &, ;, <, >
 Double-quoted  ", \, $, `
 Single-quoted  
 $(...)         \, $, )
@@ -80,11 +80,13 @@ Backtick       `, \, $
 
 - Note 1: Single-quoted has no escape mechanism; ' (U+0027) is prohibited.
 - Note 2: In $(...), only placeholder-originated ) MUST be escaped; the syntactic closing parenthesis MUST NOT be escaped.
+- Note 3: In Bare, a leading `~` at the beginning of the RHS MUST be escaped (to prevent tilde expansion) or placed into a quoted context. This is a conditional (position‑dependent) rule, not part of the unconditional matrix.
 
 #### 5.3.4 Bare Context (`VAR=<pass:...>`)
 - The following characters MUST NOT be emitted: NUL; control characters other than TAB/newline; newline (unrepresentable in bare even when `allow_newline` is present).
-- TAB MUST NOT be emitted unless the `allow_tab` modifier is present.
+- TAB MUST NOT be emitted unless the `allow_tab` modifier is present. When `allow_tab` is present, TAB in the secret value MUST be emitted as‑is (no preceding backslash added by the renderer).
 - All other Unicode code points MUST be accepted. Characters requiring protection to preserve literal meaning in a bare assignment MUST be backslash-escaped as specified in Section 5.3.3 (Bare). Top-level `#` MUST be treated per Section 4.1 (an odd number of preceding backslashes yields a literal `#`; otherwise it begins a trailing comment).
+- A leading `~` at the beginning of the RHS MUST be escaped (conditional rule) or placed into a quoted context to prevent tilde expansion. This conditional rule complements the unconditional matrix; see Note 3 above for scope and rationale.
 
 #### 5.3.5 Double-Quoted Context (`"..."`)
 - The following characters MUST NOT be emitted: NUL; control characters other than TAB/newline.

@@ -4,7 +4,7 @@ DIST_DIR ?= dist
 BIN_NAME ?= envseed
 CMD_PKG ?= ./cmd/envseed
 
-.PHONY: all build docs test test-integration test-sandbox test-fuzz check check-evt clean pre-commit
+.PHONY: all build docs test test-integration test-sandbox test-fuzz check check-evt clean pre-commit fmt
 
 docs:
 	$(GO) generate ./internal/envseed
@@ -55,7 +55,7 @@ check:
 check-evt:
 	@scripts/check-evt.sh
 
-pre-commit: docs check check-evt test test-sandbox test-integration
+pre-commit: fmt docs check check-evt test test-sandbox test-integration
 
 clean:
 	rm -rf $(DIST_DIR)
@@ -66,3 +66,8 @@ verify-version-format:
 
 verify-version-release:
 	@scripts/verify-version-release.sh
+fmt:
+	$(GO) fmt ./...
+	@dirs=$$($(GO) list -f '{{.Dir}}' ./...); \
+		echo "gofmt -s -w on package dirs"; \
+		gofmt -s -w $$dirs

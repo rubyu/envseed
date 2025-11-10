@@ -12,11 +12,11 @@ func TestDiffE2E_ExitCodesAndOutput(t *testing.T) {
 	t.Helper()
 
 	tmp := t.TempDir()
-	input := writeTemplate(t, tmp, "diff.envseed", "FOO=bar\n")
+	input := writeTemplate(t, tmp, "diff.envseed", "APP_NAME=staging\n")
 	output := filepath.Join(tmp, "diff.env")
 
 	// Case 1: different output should yield exit code 1 and show a diff.
-	if err := os.WriteFile(output, []byte("FOO=baz\n"), 0o600); err != nil {
+	if err := os.WriteFile(output, []byte("APP_NAME=production\n"), 0o600); err != nil {
 		t.Fatalf("write output (changed): %v", err)
 	}
 	stdout1, _, err1 := runEnvseed(t, "diff", "-o", output, input)
@@ -28,7 +28,7 @@ func TestDiffE2E_ExitCodesAndOutput(t *testing.T) {
 	}
 
 	// Case 2: matching output should yield exit code 0 and no diff.
-	if err := os.WriteFile(output, []byte("FOO=bar\n"), 0o600); err != nil {
+	if err := os.WriteFile(output, []byte("APP_NAME=staging\n"), 0o600); err != nil {
 		t.Fatalf("write output (matching): %v", err)
 	}
 	stdout2, _, err2 := runEnvseed(t, "diff", "-o", output, input)
@@ -91,8 +91,8 @@ func TestDiffUsesDerivedTargetHeadersWhenOutputIsDirectory(t *testing.T) {
 func TestDiffFirstOccurrenceRule(t *testing.T) {
 	t.Helper()
 	tmp := t.TempDir()
-	in := writeTemplate(t, tmp, "foo.envseed.envseed", "NAME=new\n")
-	derived := filepath.Join(tmp, "foo.env.envseed")
+	in := writeTemplate(t, tmp, "service.envseed.envseed", "NAME=new\n")
+	derived := filepath.Join(tmp, "service.env.envseed")
 	if err := os.WriteFile(derived, []byte("NAME=old\n"), 0o600); err != nil {
 		t.Fatalf("write target: %v", err)
 	}

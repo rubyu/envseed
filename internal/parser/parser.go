@@ -640,6 +640,9 @@ func scanPlaceholderLiteral(src string, start int) (string, []string, int, bool,
 				return "", nil, 0, false, newParseIssue("EVE-103-201", "empty placeholder path")
 			}
 			segment := src[pathStart:i]
+			if strings.IndexByte(segment, 0) >= 0 {
+				return "", nil, 0, false, newParseIssue("EVE-103-203", "placeholder path contains NUL byte")
+			}
 			path, issue := trimASCIIWhitespace(segment, "placeholder path", "EVE-103-204")
 			if issue != nil {
 				return "", nil, 0, false, issue
