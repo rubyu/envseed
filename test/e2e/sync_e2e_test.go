@@ -11,7 +11,7 @@ import (
 func TestSyncE2E_DryRunBasic(t *testing.T) {
 	t.Helper()
 	tmp := t.TempDir()
-	input := writeTemplate(t, tmp, "sync.envseed", "FOO=bar\n")
+	input := writeTemplate(t, tmp, "sync.envseed", "APP_NAME=staging\n")
 
 	stdout, stderr, err := runEnvseed(t, "sync", "--dry-run", input)
 	if err != nil {
@@ -26,7 +26,7 @@ func TestSyncE2E_DryRunBasic(t *testing.T) {
 func TestSyncFirstOccurrenceRule(t *testing.T) {
 	t.Helper()
 	tmp := t.TempDir()
-	in := writeTemplate(t, tmp, "foo.envseed.envseed", "X=1\n")
+	in := writeTemplate(t, tmp, "service.envseed.envseed", "X=1\n")
 	stdout, stderr, err := runEnvseed(t, "sync", "--dry-run", in)
 	if err != nil {
 		t.Fatalf("sync --dry-run failed: %v (stderr=%s)", err, stderr)
@@ -36,7 +36,7 @@ func TestSyncFirstOccurrenceRule(t *testing.T) {
 		t.Fatalf("missing target header: %q", stdout)
 	}
 	got := strings.TrimPrefix(lines[0], "target: ")
-	want := filepath.Join(tmp, "foo.env.envseed")
+	want := filepath.Join(tmp, "service.env.envseed")
 	if got != want {
 		t.Fatalf("first-occurrence mapping mismatch: got %q want %q", got, want)
 	}
@@ -47,7 +47,7 @@ func TestSyncE2E_WritesExplicitOutputFile(t *testing.T) {
 	t.Helper()
 	tmp := t.TempDir()
 
-	input := writeTemplate(t, tmp, "sync.envseed", "FOO=bar\n")
+	input := writeTemplate(t, tmp, "sync.envseed", "APP_NAME=staging\n")
 	outPath := filepath.Join(tmp, "result.env")
 	if _, stderr, err := runEnvseed(t, "sync", "--output", outPath, input); err != nil {
 		t.Fatalf("sync failed: %v (stderr=%s)", err, stderr)
@@ -56,7 +56,7 @@ func TestSyncE2E_WritesExplicitOutputFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read output: %v", err)
 	}
-	if string(data) != "FOO=bar\n" {
+	if string(data) != "APP_NAME=staging\n" {
 		t.Fatalf("output mismatch: %q", string(data))
 	}
 }
@@ -66,7 +66,7 @@ func TestSyncE2E_WritesDerivedOutputInDirectory(t *testing.T) {
 	t.Helper()
 	tmp := t.TempDir()
 
-	input := writeTemplate(t, tmp, "service.envseed", "FOO=bar\n")
+	input := writeTemplate(t, tmp, "service.envseed", "APP_NAME=staging\n")
 
 	// Use --output with a directory path; output filename should be derived
 	// from the input (envseed -> env).
@@ -82,7 +82,7 @@ func TestSyncE2E_WritesDerivedOutputInDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read derived output: %v", err)
 	}
-	if string(data) != "FOO=bar\n" {
+	if string(data) != "APP_NAME=staging\n" {
 		t.Fatalf("derived output mismatch: %q", string(data))
 	}
 }
@@ -91,7 +91,7 @@ func TestSyncE2E_WritesDerivedOutputInDirectory(t *testing.T) {
 func TestSyncE2E_DryRunQuietSuppressesInfo(t *testing.T) {
 	t.Helper()
 	tmp := t.TempDir()
-	input := writeTemplate(t, tmp, "quiet.envseed", "FOO=bar\n")
+	input := writeTemplate(t, tmp, "quiet.envseed", "APP_NAME=staging\n")
 
 	stdout, stderr, err := runEnvseed(t, "sync", "--dry-run", "--quiet", input)
 	if err != nil {
@@ -107,7 +107,7 @@ func TestSyncE2E_DryRunQuietSuppressesInfo(t *testing.T) {
 func TestSyncE2E_DryRun_NoStderr(t *testing.T) {
 	t.Helper()
 	tmp := t.TempDir()
-	input := writeTemplate(t, tmp, "dryrun.envseed", "FOO=bar\n")
+	input := writeTemplate(t, tmp, "dryrun.envseed", "APP_NAME=staging\n")
 
 	stdout, stderr, err := runEnvseed(t, "sync", "--dry-run", input)
 	if err != nil {

@@ -39,7 +39,7 @@ func TestResolveOutputPathRequiresEnvseed(t *testing.T) {
 		t.Fatal("expected error for input lacking 'envseed'")
 	}
 	var exitErr *ExitError
-	if !errors.As(err, &exitErr) || exitErr.DetailCode != "EVE-101-203" {
+	if !errors.As(err, &exitErr) || exitErr.DetailCode != "EVE-101-201" {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

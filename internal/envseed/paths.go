@@ -17,7 +17,7 @@ func resolveOutputPath(input, explicit string) (string, error) {
 	var candidate string
 	if explicit == "" {
 		if !strings.Contains(input, "envseed") {
-			return "", NewExitError("EVE-101-203", input)
+			return "", NewExitError("EVE-101-201", input)
 		}
 		candidate = strings.Replace(input, "envseed", "env", 1)
 	} else {

@@ -8,7 +8,7 @@
   - This specification is authoritative for behavior, algorithms, and failure conditions.
   - Error subcodes (numbering, messages, guidance) are canonical in `docs/errors.md` (generated from `internal/envseed/errors.go`). This specification does not enumerate specific numbers here; see Section 7.10 for exit categories and assignment principles, and Section 7.11 for diagnostic display format.
 
-### 1.3 Vocabulary Style
+### 1.2 Vocabulary Style
 - Identifiers (e.g., contexts `bare`, `double_quoted`, `single_quoted`, `command_subst`, `backtick`; modifiers `allow_newline`, etc.) MUST be written in lowercase and displayed in monospace format.
 - Headings MAY contain human-readable names followed by the corresponding identifier in parentheses, e.g., "Backtick (`backtick`)".
 - Smart quotation marks (“ ” ‘ ’) MUST NOT be used for defined terms. Authors MUST use monospace format by surrounding the term with backticks (\`) instead.
@@ -21,7 +21,7 @@
 - When a parenthetical reference occurs at the end of a sentence, the period MUST appear after the closing parenthesis.
 - The standard prefixes for notes are "Note:" and "Notes:". The trailing colon MUST always be included.
 
-### 1.2 Terminology and Definitions
+### 1.3 Terminology and Definitions
 This document uses "EnvSeed" for the system name and "envseed" for the CLI command and file names.
 
 Core entities:
@@ -41,4 +41,10 @@ Syntax and tokens:
 - Required backslashes: Backslashes necessary to preserve literal meaning in a given quoting/substitution context. For parsing they are not part of the parse-time string segment. For redaction behavior pertaining to escape pairs and newline treatment, see Section 6.3.
 
 Character classes: 
- - See Appendix D.1 for normative definitions of whitespace and newline tokens. Control character handling at render time is governed by Section 5.3.
+- See Appendix D.1 for normative definitions of whitespace and newline tokens. Control character handling at render time is governed by Section 5.3.
+
+CLI path terms:
+- Selected input path: The path string chosen by the CLI as the input. It is either the explicit `INPUT_FILE` argument when provided or the default `./.envseed` when `INPUT_FILE` is omitted. Selection does not imply existence or readability; validation is performed separately.
+- Selected input name: The last path component (file name) of the selected input path. Name-based rules (for example, the `envseed` -> `env` derivation) refer to this value.
+- Input file: The file at the selected input path. For `sync`, `diff`, and `validate`, the input file MUST exist as a readable regular file (see Section 7.3). The `version` subcommand MUST NOT accept an input file.
+- Resolved output path: The final destination path computed from `--output` (when provided) or by replacing the first occurrence of `envseed` in the selected input path with `env` (see Section 7.5). When `--output` ends with a path separator or points to an existing directory, the derived file name (`envseed` -> `env`) is appended. Paths emitted in diagnostics (for example, dry-run header, diff headers) MUST be absolute.

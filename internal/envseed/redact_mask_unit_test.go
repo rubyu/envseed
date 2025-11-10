@@ -2,6 +2,7 @@
 package envseed
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -41,4 +42,24 @@ func containsRune(s string, r rune) bool {
 		}
 	}
 	return false
+}
+
+// [EVT-MWU-3] Target .env grammar-level whitespace: value-internal Unicode is accepted
+func TestParseTarget_AllowsUnicodeWhitespaceInsideValue(t *testing.T) {
+	// NBSP inside a double-quoted value must be accepted
+	text := "VAL=\"a\u00A0b\"\n"
+	if _, err := ParseTarget(text); err != nil {
+		t.Fatalf("ParseTarget unexpected error: %v", err)
+	}
+}
+
+// [EVT-MWU-3] Target .env grammar-level whitespace: leading non-ASCII whitespace rejected
+func TestParseTarget_RejectsNonASCIILeadingWhitespace(t *testing.T) {
+	// NBSP before a whole-line comment: should be grammar-level whitespace violation (EVE-107-101)
+	text := "\u00A0# comment\n"
+	_, err := ParseTarget(text)
+	var exitErr *ExitError
+	if err == nil || !errors.As(err, &exitErr) || exitErr.DetailCode != "EVE-107-101" {
+		t.Fatalf("expected EVE-107-101, got %v", err)
+	}
 }

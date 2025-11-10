@@ -5,18 +5,90 @@ The key words `MUST`, `MUST NOT`, `SHOULD`, and `MAY` are to be interpreted as d
 ## Table of Contents
 
 - 1. Foundations and Conventions - [01-foundations.md](01-foundations.md)
+  - 1.1 Scope and Normativity
+  - 1.2 Vocabulary Style
+  - 1.3 Terminology and Definitions
 - 2. Architecture Overview (Informative) - [02-architecture.md](02-architecture.md)
 - 3. Data Model - [03-data-model.md](03-data-model.md)
 - 4. Parsing Specification - [04-parsing.md](04-parsing.md)
+  - 4.1 Bash-Compatible Assignment and Lexical Rules
+  - 4.2 Elements and Tokens (AST)
+  - 4.3 Placeholder Syntax (EnvSeed Extension)
+  - 4.4 Determinism and Preservation
+  - 4.5 Parse Errors and Diagnostics
+  - 4.6 Bash Behavior Validation (Informative)
 - 5. Rendering Specification - [05-rendering.md](05-rendering.md)
+  - 5.1 Rendering Pipeline
+  - 5.2 Modifier Semantics
+  - 5.3 Context Rules and Escaping
+  - 5.4 Error Semantics, Post-render Re-parse, and Subcodes
 - 6. Security Model - [06-security.md](06-security.md)
+  - 6.1 Security Invariants
+  - 6.2 Resolver & Secret Lifecycle
+  - 6.3 Redaction Policy & Algorithm
+  - 6.4 Streams & Logging Policy
+  - 6.5 Output Artifacts & Permissions
+  - 6.6 Dangerous Mode Considerations
 - 7. CLI Contract - [07-cli.md](07-cli.md)
+  - 7.1 Global CLI Behavior
+  - 7.2 Commands
+  - 7.3 Arguments
+  - 7.4 Common Options
+  - 7.5 Path Resolution
+  - 7.6 Target .env Parsing Requirements
+  - 7.7 sync
+  - 7.8 diff
+  - 7.9 validate
+  - 7.10 Exit Codes
+  - 7.10.1 Subcode Bands
+  - 7.10.2 Subcode Assignment Principles
+  - 7.10.3 Assignment Flow (Informative)
+  - 7.10.4 Examples (Informative)
+  - 7.11 Diagnostics (CLI Diagnostic Display)
 - 8. Conformance and Testing - [08-testing.md](08-testing.md)
+  - 8.1 Deterministic Unit Tests
+  - 8.2 Round-Trip and Re-parse
+  - 8.3 Property-Based Testing
+  - 8.4 Fuzz Corpus
+  - 8.5 Sandbox Execution
+  - 8.6 Resolver Doubles & Failure Injection
+  - 8.7 Test Identifiers in Tests
 - 9. Runtime Environment and Dependencies - [09-dependencies.md](09-dependencies.md)
 - 10. Versioning & Release Semantics - [10-versioning.md](10-versioning.md)
+  - 10.1 Version String Forms
+  - 10.2 Branch and Tag Rules
+  - 10.3 Version Resolution and Embedding
+  - 10.4 Output Semantics
 - Appendix A. Examples as Fixtures (Informative) - [A-examples.md](A-examples.md)
+  - A.1 Conventions
+  - A.2 Bare Context (`VAR=<pass:...>`)
+  - A.3 Double-Quoted (`VAR="..."`)
+  - A.4 Single-Quoted (`VAR='...'`)
+  - A.5 Command Substitution (`VAR=$(...)`)
+  - A.6 Backtick (`` `...` ``)
+  - A.7 Placeholder Syntax
+  - A.8 Modifiers
+  - A.9 Boundary / Edge Cases
+  - A.10 Realistic Combined Fixture
+  - A.11 Unified Diff Example
 - Appendix B. Error Details Map - [B-error-map.md](B-error-map.md)
 - Appendix C. Test Coverage Checklist - [C-test-coverage.md](C-test-coverage.md)
+  - C.1 Overview (Informative)
+  - C.2 Identifiers & Conventions
+  - C.3 Taxonomy and Notation (Informative)
+  - C.4 Module-Level Tests
+  - C.5 Broader-Scope Tests
 - Appendix D. ABNF Grammar (Informative) - [D-grammar.md](D-grammar.md)
- - Appendix E. Pass Behavior: pass show semantics and whitespace (Informative) - [E-pass-behavior.md](E-pass-behavior.md)
- - Appendix F. Bash Behavior (Informative) - [F-bash-behavior.md](F-bash-behavior.md)
+  - D.1 Core Tokens & Whitespace
+  - D.2 File & Elements
+  - D.3 Name / Operator / Index
+  - D.4 Value & Tokenization
+  - D.5 Placeholder
+- Appendix E. Pass Behavior: pass show semantics and whitespace (Informative) - [E-pass-behavior.md](E-pass-behavior.md)
+  - E.1 Scope and Sources
+  - E.2 pass show (stdout)
+  - E.3 pass show --clip/--qrcode
+  - E.4 Entry creation and whitespace
+  - E.5 Examples
+  - E.6 Interactions with EnvSeed
+- Appendix F. Bash Behavior (Informative) - [F-bash-behavior.md](F-bash-behavior.md)

@@ -36,6 +36,13 @@
 - CLI message: `unknown or invalid flag %q`
 - Guidance: An unknown or invalid flag was provided. Remove or correct the flag. See `envseed <command> --help` for supported options.
 
+<a id="eve-101-6"></a>
+## EVE-101-6
+
+- Exit code: `101`
+- CLI message: `unexpected positional arguments`
+- Guidance: Too many positional arguments were provided. Provide at most one optional INPUT_FILE.
+
 <a id="eve-101-101"></a>
 ## EVE-101-101
 
@@ -45,20 +52,6 @@
 
 <a id="eve-101-201"></a>
 ## EVE-101-201
-
-- Exit code: `101`
-- CLI message: `input file argument is required`
-- Guidance: No `INPUT_FILE` argument was provided. Provide the template path as the `INPUT_FILE` argument. See `envseed <command> --help` for usage.
-
-<a id="eve-101-202"></a>
-## EVE-101-202
-
-- Exit code: `101`
-- CLI message: `input file %q not found`
-- Guidance: The specified input file was not found. Verify the template path, ensure the file exists, and confirm it is readable.
-
-<a id="eve-101-203"></a>
-## EVE-101-203
 
 - Exit code: `101`
 - CLI message: ``input file %q must contain `envseed` when `--output` is omitted``
@@ -71,19 +64,40 @@
 - CLI message: `output path %q is a directory`
 - Guidance: The output path resolves to a directory. Choose a path that resolves to a regular file. Specify the output file explicitly with `--output` when needed.
 
-<a id="eve-101-302"></a>
-## EVE-101-302
-
-- Exit code: `101`
-- CLI message: `input path %q is a directory`
-- Guidance: The input path points to a directory. Provide a path to a readable regular file as `INPUT_FILE`.
-
 <a id="eve-102-1"></a>
 ## EVE-102-1
 
 - Exit code: `102`
-- CLI message: `failed to read template file %q`
-- Guidance: A filesystem or permission error prevented reading the template file. Check the path, confirm the file exists, and ensure it is readable.
+- CLI message: `selected input %q not found`
+- Guidance: The selected input does not exist (ENOENT). Verify the path or create the file.
+
+<a id="eve-102-2"></a>
+## EVE-102-2
+
+- Exit code: `102`
+- CLI message: `selected input %q is a directory`
+- Guidance: The selected input resolves to a directory (EISDIR). Provide a readable regular file.
+
+<a id="eve-102-3"></a>
+## EVE-102-3
+
+- Exit code: `102`
+- CLI message: `selected input %q path component is not a directory`
+- Guidance: One or more path components are not directories (ENOTDIR). Fix the path structure.
+
+<a id="eve-102-4"></a>
+## EVE-102-4
+
+- Exit code: `102`
+- CLI message: `selected input %q symlink loop detected`
+- Guidance: A symbolic link loop prevents resolving the selected input (ELOOP). Fix the links.
+
+<a id="eve-102-5"></a>
+## EVE-102-5
+
+- Exit code: `102`
+- CLI message: `selected input %q name too long`
+- Guidance: The path or filename exceeds the length limit (ENAMETOOLONG). Shorten the path or filename.
 
 <a id="eve-102-101"></a>
 ## EVE-102-101
@@ -92,19 +106,40 @@
 - CLI message: `permission denied reading %q`
 - Guidance: Reading the file was denied by the operating system. Check file ownership and read permissions, or run with sufficient privileges.
 
+<a id="eve-102-201"></a>
+## EVE-102-201
+
+- Exit code: `102`
+- CLI message: `open failed for selected input %q`
+- Guidance: Opening the selected input failed due to resource exhaustion or other OS-level errors.
+
+<a id="eve-102-202"></a>
+## EVE-102-202
+
+- Exit code: `102`
+- CLI message: `I/O error reading selected input %q`
+- Guidance: Reading the selected input failed (e.g., EIO). Try again or check the media.
+
+<a id="eve-102-203"></a>
+## EVE-102-203
+
+- Exit code: `102`
+- CLI message: `failed to read template file %q`
+- Guidance: An unspecified I/O error occurred while accessing the selected input.
+
 <a id="eve-103-1"></a>
 ## EVE-103-1
 
 - Exit code: `103`
 - CLI message: ``non-ASCII whitespace around placeholder separators or before `>```
-- Guidance: Non‑ASCII whitespace was detected around `|`, `,`, or before `>`. Use ASCII SPACE or TAB only. For example: NG: `<pass:foo | base64>`. OK: `<pass:foo|base64>`.
+- Guidance: Non‑ASCII whitespace was detected around `|`, `,`, or before `>`. Use ASCII SPACE or TAB only. For example: NG: `<pass:api_key | base64>`. OK: `<pass:api_key|base64>`.
 
 <a id="eve-103-2"></a>
 ## EVE-103-2
 
 - Exit code: `103`
 - CLI message: `non-ASCII whitespace adjacent to placeholder PATH`
-- Guidance: Non‑ASCII whitespace was detected adjacent to the placeholder path. Use ASCII SPACE or TAB only when trimming around the placeholder path. For example: NG uses U+00A0 between `:` and `foo`: `<pass:foo|...>`. OK: `<pass:foo|...>`.
+- Guidance: Non‑ASCII whitespace was detected adjacent to the placeholder path. Use ASCII SPACE or TAB only when trimming around the placeholder path. For example: NG uses U+00A0 between `:` and `api_key`: `<pass:api_key|...>`. OK: `<pass:api_key|...>`.
 
 <a id="eve-103-3"></a>
 ## EVE-103-3
@@ -153,7 +188,7 @@
 
 - Exit code: `103`
 - CLI message: `unterminated placeholder`
-- Guidance: The placeholder is unterminated. Close placeholders with `>` and ensure all modifiers are complete. For example: NG: `<pass:foo|allow_newline`. OK: `<pass:foo|allow_newline>`.
+- Guidance: The placeholder is unterminated. Close placeholders with `>` and ensure all modifiers are complete. For example: NG: `<pass:api_key|allow_newline`. OK: `<pass:api_key|allow_newline>`.
 
 <a id="eve-103-203"></a>
 ## EVE-103-203
@@ -169,12 +204,19 @@
 - CLI message: `placeholder path contains non-ASCII whitespace`
 - Guidance: Non‑ASCII whitespace was found around the placeholder path. Use ASCII SPACE or TAB only.
 
+<a id="eve-103-205"></a>
+## EVE-103-205
+
+- Exit code: `103`
+- CLI message: `template contains NUL byte`
+- Guidance: The template contains a NUL byte (U+0000). Remove NUL bytes from the input.
+
 <a id="eve-103-301"></a>
 ## EVE-103-301
 
 - Exit code: `103`
-- CLI message: `missing placeholder modifiers`
-- Guidance: No placeholder modifiers were provided. List at least one modifier after `|`. For example: `<pass:foo|allow_newline>`.
+- CLI message: `missing placeholder modifiers after '|'`
+- Guidance: The `|` separator was present but no modifiers were provided after it. List at least one modifier after `|`. For example: `<pass:api_key|allow_newline>`.
 
 <a id="eve-103-302"></a>
 ## EVE-103-302
@@ -188,14 +230,14 @@
 
 - Exit code: `103`
 - CLI message: `duplicate placeholder modifier %q`
-- Guidance: A placeholder modifier was repeated. Specify each modifier at most once. For example: NG: `<pass:foo|strip,strip>`. OK: `<pass:foo|strip>`.
+- Guidance: A placeholder modifier was repeated. Specify each modifier at most once. For example: NG: `<pass:api_key|strip,strip>`. OK: `<pass:api_key|strip>`.
 
 <a id="eve-103-304"></a>
 ## EVE-103-304
 
 - Exit code: `103`
 - CLI message: `empty placeholder modifier`
-- Guidance: An empty placeholder modifier was found. Remove empty entries between commas. For example: NG: `<pass:foo|strip,,base64>`.
+- Guidance: An empty placeholder modifier was found. Remove empty entries between commas. For example: NG: `<pass:api_key|strip,,base64>`.
 
 <a id="eve-103-305"></a>
 ## EVE-103-305
@@ -537,8 +579,8 @@
 ## EVE-107-101
 
 - Exit code: `107`
-- CLI message: `target .env contains non-ASCII whitespace`
-- Guidance: Non‑ASCII whitespace was found in the target `.env`. Use ASCII SPACE or TAB only.
+- CLI message: `target .env contains non-ASCII whitespace at the beginning of the line before the assignment`
+- Guidance: Non‑ASCII whitespace was found at the beginning of an assignment line (indentation). Use ASCII SPACE or TAB only in that position. For example: NG uses U+00A0 before `APP_PORT=8080`: `\u00A0APP_PORT=8080`. OK: ` APP_PORT=8080` or `\tAPP_PORT=8080`.
 
 <a id="eve-107-102"></a>
 ## EVE-107-102

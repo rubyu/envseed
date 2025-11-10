@@ -8,13 +8,10 @@
 🌱   EnvSeed - grow your .env from seeds
 ```
 
-> “They call it `.env`—a cursed thing.  
-> Everyone owns one, everyone depends on it, every moment of their lives.  
-> Yet they scatter it everywhere, never thinking what would happen…  
-> until it’s gone—and the nightmare begins.”
+EnvSeed is a tiny CLI that rebuilds your `.env` from safe templates. 
+Templates live in Git; secrets stay in `pass`.
 
----
-EnvSeed is a small command-line utility that reconstructs `.env` files from `.envseed*` templates. It helps you generate `.env` files safely and reproducibly, while keeping the seed templates securely stored. Placeholders in the templates are resolved via the `pass` command, and context-aware escaping ensures secrets are written safely.
+> “Never babysit your .env again.”
 
 ## Demo
 
@@ -23,18 +20,13 @@ cat > .envseed <<EOF
 PASSWORD='<pass:www.example.com/password>'
 EOF
 
-envseed sync .envseed
+envseed sync
 cat .env
 ```
 
 ```sh
 PASSWORD='vP9%cQ$m*Nqk'
 ```
-
-## Why EnvSeed
-- `.env` files should never be committed or shared, yet teams still need a reliable way to restore them.  
-- Manually copying secrets into `.env` is error-prone and, frankly, a waste of time.  
-- EnvSeed securely handles secrets while providing a safe and elegant way to manage escaping, quoting, and newlines or tabs, with context- and syntax-aware processing.
 
 ## Features
 - Create `.env` files from template files.  
@@ -43,94 +35,115 @@ PASSWORD='vP9%cQ$m*Nqk'
 - Perform syntax validation using a compact Bash-subset parser.  
 - Show a diff and confirm changes before applying them to `.env` files.
 
+## Safety
+- 🔐 Secrets live in `pass` (GPG) — not in Git.
+- 🙈 Masked output for dry‑run/diff.
+- 🧪 Parser validation before touching `pass`.
+- ✍️ Atomic writes + `0600` perms.
+- 🧯 Non–dry‑run does not echo rendered secrets.
+
+## Why EnvSeed
+- `.env` files should never be committed or shared, yet teams still need a reliable way to restore them.  
+- Manually copying secrets into `.env` is error-prone and, frankly, a waste of time.  
+- EnvSeed securely handles secrets while providing a safe and elegant way to manage escaping, quoting, and newlines or tabs, with context- and syntax-aware processing.
+
 ## How It Works
-1. Create a template file (e.g., `.envseed`).  
-2. Write its contents with placeholders such as `<pass:service/api-token>`.  
-3. Run the command `envseed sync .envseed`.
-4. Enter the password for your GPG key when prompted.
-5. EnvSeed then:
-   - parses the template,  
-   - retrieves secrets using `pass show <PATH>`,  
-   - applies context-aware escaping, and  
-   - writes the resulting `.env` file.
+1. Parse `.envseed` with a compact Bash‑subset parser (syntax validated).
+2. For each `<pass:…>` placeholder, run `pass show <PATH>`.
+3. Apply context‑aware escaping (quotes/newlines/tabs).
+4. Atomically write target `.env*` with `0600` permissions.
+5. Optionally show a masked unified diff before applying.
+
+Result: predictable, reproducible `.env` without leaking secrets. 
 
 ## Requirements
-- Dependency: `pass` (Password Store) — https://www.passwordstore.org/
+- Dependency: `pass` (Password Store, backed by GPG) — https://www.passwordstore.org/
 - Supported OS: Linux or macOS
 
 ## Installation
-There are several ways to install EnvSeed.
 
-1. Releases via command (recommended)
+### Recommended (scripted release install):
 
-   Fetch the latest release for your OS/ARCH and install into `~/.local/bin` (or `/usr/local/bin`).
+```bash
+curl -fsSL https://raw.githubusercontent.com/rubyu/envseed/main/scripts/install.sh | bash
+```
 
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/rubyu/envseed/main/scripts/install.sh | bash
-   ```
+### Pin a version / custom bin dir:
 
-   Pin a version and choose a destination (example: install v0.1.0 to /usr/local/bin):
+```bash
+curl -fsSL https://raw.githubusercontent.com/rubyu/envseed/main/scripts/install.sh \
+  | bash -s -- -v v0.1.0 -b /usr/local/bin
+```
 
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/rubyu/envseed/main/scripts/install.sh \
-     | bash -s -- -v v0.1.0 -b /usr/local/bin
-   ```
+### Go users:
 
-2. Go install
+```bash
+go install github.com/rubyu/envseed/cmd/envseed@latest
+```
 
-   ```bash
-   go install github.com/rubyu/envseed/cmd/envseed@latest
-   ```
+### Build from source (optional):
 
-3. Build from source (Make)
+```bash
+make build
+```
 
-   ```bash
-   make build
-   ```
-
-   The binary is written to `dist/envseed`.
+The binary is written to `dist/envseed`.
 
 ## Quick Start
-#### Preview (dry-run)
-Shows a masked preview on stdout without writing any files. Safe for a first run.
-```bash
-envseed sync --dry-run .envseed
+#### Sync
+```
+╔════════════════════════════════════════════════════╗
+║ envseed  sync  [flags]  [INPUT_FILE]               ║
+║          ────                                      ║
+╚════════════════════════════════════════════════════╝
 ```
 
-#### Write to an implicit file
-Replaces the first "envseed" in the input filename with "env" and writes the resulting `.env*` next to the template. Example: `.envseed.testing` → `.env.testing`.
+Render the template and write the output file.
+
 ```bash
-envseed sync .envseed
+envseed sync
 ```
 
-#### Write to an explicit file
-Writes to the exact file you specify. Use `--force` if the file already exists.
+Note:
+- You can omit `[INPUT_FILE]`. If omitted, envseed uses `.envseed` in the current directory as the input file.
+
+#### Sync (override the input file)
 ```bash
-envseed sync -o ./config/.env .envseed
+envseed sync .envseed.testing
 ```
 
-#### Write to a directory
-When given a directory, writes under it using a derived filename (`envseed` → `env`). Example: `./build/.env.testing`.
+#### Sync (safe preview with --dry-run)
 ```bash
-envseed sync -o ./build .envseed.testing
+envseed sync --dry-run
 ```
 
-#### Diff against an explicit target
-Renders in memory and prints a masked unified diff.
-```bash
-envseed diff -o ./config/.env .envseed
+#### Diff
+```
+╔════════════════════════════════════════════════════╗
+║ envseed  diff  [flags]  [INPUT_FILE]               ║
+║          ────                                      ║
+╚════════════════════════════════════════════════════╝
 ```
 
-#### Validate (parse only)
-Parses the template and reports syntax/lexing errors. Does not contact `pass`.
+Render in memory and print a redacted unified diff.
+
 ```bash
-envseed validate .envseed
+envseed diff
 ```
 
-Notes
-- When `--output` is omitted, the template filename must contain `envseed` (validate is exempt).
-- In non–dry-run, rendered content is not printed to stdout. Writes are atomic and final permissions are `0600`.
-- Diff and dry-run display masked content only.
+#### Validate
+```
+╔════════════════════════════════════════════════════╗
+║ envseed  validate  [flags]  [INPUT_FILE]           ║
+║          ────────                                  ║
+╚════════════════════════════════════════════════════╝
+```
+
+Parse the template and report errors.
+
+```bash
+envseed validate
+```
 
 ## CI Status
 | Branch  | Status |
@@ -139,9 +152,9 @@ Notes
 | develop| [![CI - develop](https://github.com/rubyu/envseed/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/rubyu/envseed/actions/workflows/ci.yml?query=branch%3Adevelop) |
 
 ## CLI Reference
-For the full CLI reference (commands, flags, path resolution, exit codes, template language, and security), see:
+For the full CLI reference (commands, flags, default input behavior, path resolution, exit codes, template language, and security), see:
 
-- docs/cli.md
+- [CLI Reference](docs/cli.md)
 
 ## Development
 - Build: `make build`
@@ -152,10 +165,10 @@ For the full CLI reference (commands, flags, path resolution, exit codes, templa
 - Pre‑commit tasks: `make pre-commit`
 
 For conformance guidance, parser/renderer details, and the full error taxonomy, see the developer specification:
-- spec/README.md
+- [Developer Specification](spec/README.md)
 
 For a clear, reproducible approach to property‑based tests and fuzzing (deterministic baselines, corpus replay, and optional exploratory fuzzing), see:
-- docs/testing/fuzz.md
+- [Fuzz Testing Guide](docs/testing/fuzz.md)
 
 ## License
-MIT. See `LICENSE` for details.
+MIT. See [LICENSE](LICENSE) for details.
