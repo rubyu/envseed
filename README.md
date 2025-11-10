@@ -62,32 +62,9 @@ Result: predictable, reproducible `.env` without leaking secrets.
 
 ## Installation
 
-### Recommended (scripted release install):
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/rubyu/envseed/main/scripts/install.sh | bash
 ```
-
-### Pin a version / custom bin dir:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/rubyu/envseed/main/scripts/install.sh \
-  | bash -s -- -v v0.1.0 -b /usr/local/bin
-```
-
-### Go users:
-
-```bash
-go install github.com/rubyu/envseed/cmd/envseed@latest
-```
-
-### Build from source (optional):
-
-```bash
-make build
-```
-
-The binary is written to `dist/envseed`.
 
 ## Quick Start
 #### Sync
@@ -104,8 +81,7 @@ Render the template and write the output file.
 envseed sync
 ```
 
-Note:
-- You can omit `[INPUT_FILE]`. If omitted, envseed uses `.envseed` in the current directory as the input file.
+Note: You can omit `[INPUT_FILE]`. If omitted, envseed uses `.envseed` in the current directory as the input file.
 
 #### Sync (override the input file)
 ```bash
@@ -145,6 +121,30 @@ Parse the template and report errors.
 envseed validate
 ```
 
+---
+
+## Anothor Installation Methods
+### Pin a version / custom bin dir:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rubyu/envseed/main/scripts/install.sh \
+  | bash -s -- -v v0.1.0 -b /usr/local/bin
+```
+
+### Go users:
+
+```bash
+go install github.com/rubyu/envseed/cmd/envseed@latest
+```
+
+### Build from source (optional):
+
+```bash
+make build
+```
+
+The binary is written to `dist/envseed`.
+
 ## CI Status
 | Branch  | Status |
 |--------|--------|
@@ -167,8 +167,8 @@ For the full CLI reference (commands, flags, default input behavior, path resolu
 For conformance guidance, parser/renderer details, and the full error taxonomy, see the developer specification:
 - [Developer Specification](spec/README.md)
 
-For a clear, reproducible approach to property‑based tests and fuzzing (deterministic baselines, corpus replay, and optional exploratory fuzzing), see:
-- [Fuzz Testing Guide](docs/testing/fuzz.md)
+For contribution guidelines, development workflow, and the project's testing strategy, see:
+- [Contributing Guide](CONTRIBUTING.md)
 
 ## License
 MIT. See [LICENSE](LICENSE) for details.
