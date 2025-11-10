@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"envseed/internal/parser"
@@ -12,9 +13,7 @@ import (
 
 // Sync executes the envseed sync workflow.
 func Sync(ctx context.Context, opts SyncOptions) error {
-	if opts.InputPath == "" {
-		return NewExitError("EVE-101-201")
-	}
+	// NOTE: input selection is handled by CLI (0/1 args). I/O classification follows EVE-102 bands.
 
 	passClient := opts.PassClient
 	if passClient == nil {
@@ -30,18 +29,25 @@ func Sync(ctx context.Context, opts SyncOptions) error {
 		stderr = os.Stderr
 	}
 
-	data, err := os.ReadFile(opts.InputPath)
+	// stat-first classification (B0/B1), then open/read (B2)
+	if info, statErr := os.Lstat(opts.InputPath); statErr != nil {
+		code := classifyStatDetail(statErr)
+		return NewExitError(code, opts.InputPath).WithErr(statErr)
+	} else if info.IsDir() {
+		return NewExitError("EVE-102-2", opts.InputPath)
+	}
+	f, err := os.Open(opts.InputPath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return NewExitError("EVE-101-202", opts.InputPath).WithErr(err)
-		}
 		if errors.Is(err, os.ErrPermission) {
 			return NewExitError("EVE-102-101", opts.InputPath).WithErr(err)
 		}
-		if info, statErr := os.Stat(opts.InputPath); statErr == nil && info.IsDir() {
-			return NewExitError("EVE-101-302", opts.InputPath).WithErr(err)
-		}
-		return NewExitError("EVE-102-1", opts.InputPath).WithErr(err)
+		// open time I/O failure
+		return NewExitError("EVE-102-201", opts.InputPath).WithErr(err)
+	}
+	data, rerr := io.ReadAll(f)
+	_ = f.Close()
+	if rerr != nil {
+		return NewExitError("EVE-102-202", opts.InputPath).WithErr(rerr)
 	}
 
 	targetPath, err := resolveOutputPath(opts.InputPath, opts.OutputPath)

@@ -58,7 +58,7 @@ func ExportRenderSingleQuoted(secret string, mods map[string]bool, line, column 
 	return renderSingleQuoted(secret, mods, line, column, path)
 }
 func ExportRenderBare(secret string, mods map[string]bool, line, column int, path string) (string, error) {
-	return renderBare(secret, mods, line, column, path)
+	return renderBare(secret, mods, line, column, path, true)
 }
 func ExportRenderDoubleQuoted(secret string, mods map[string]bool, line, column int, path string) (string, error) {
 	return renderDoubleQuoted(secret, mods, line, column, path)

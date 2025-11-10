@@ -82,18 +82,18 @@ func TestRender_DoubleQuotedAllowNewline(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRenderStringExternal(t *testing.T) {
-	out, err := renderer.RenderString("FOO=<pass:foo>\n", externalResolver{"foo": "bar"})
+	out, err := renderer.RenderString("API_KEY=<pass:api_key>\n", externalResolver{"api_key": "s3cr3t"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}
-	if out != "FOO=bar\n" {
-		t.Fatalf("rendered = %q, want FOO=bar", out)
+	if out != "API_KEY=s3cr3t\n" {
+		t.Fatalf("rendered = %q, want API_KEY=s3cr3t", out)
 	}
 	elems, err := parser.Parse(out)
 	if err != nil {
 		t.Fatalf("Parse returned error: %v", err)
 	}
-	if len(elems) != 1 || elems[0].Assignment == nil || elems[0].Assignment.Name != "FOO" {
+	if len(elems) != 1 || elems[0].Assignment == nil || elems[0].Assignment.Name != "API_KEY" {
 		t.Fatalf("unexpected parse result: %#v", elems)
 	}
 }
@@ -590,7 +590,7 @@ func TestRender_AllowTabBare(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}
-	want := "EXAMPLE_VAR=a\\\tb\n"
+	want := "EXAMPLE_VAR=a\tb\n"
 	if got != want {
 		t.Fatalf("rendered output = %q, want %q", got, want)
 	}
@@ -598,10 +598,10 @@ func TestRender_AllowTabBare(t *testing.T) {
 
 // [EVT-MEP-3]
 func TestRender_RoundTripAndBash(t *testing.T) {
-	input := "# header\nEXAMPLE_VAR=\"value <pass:example|allow_tab>\"\nBAR=$(echo <pass:bar|allow_newline>)\n"
+	input := "# header\nEXAMPLE_VAR=\"value <pass:example|allow_tab>\"\nNOTES=$(echo <pass:multiline_note|allow_newline>)\n"
 	rendered, err := renderer.RenderString(input, externalResolver{
-		"example": "a\tb",
-		"bar":     "line1\nline2",
+		"example":        "a\tb",
+		"multiline_note": "line1\nline2",
 	})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -626,6 +626,38 @@ func TestRender_Base64Bare(t *testing.T) {
 	want := "TOKEN=" + wantEncoded + "\n"
 	if rendered != want {
 		t.Fatalf("rendered output = %q, want %q", rendered, want)
+	}
+}
+
+// [EVT-MEU-4]
+func TestRender_BareEscapesExtendedSet(t *testing.T) {
+	t.Helper()
+	// Extended always-escape characters in Bare: |, &, ;, <, >
+	input := "EXT=<pass:secret>\n"
+	secret := "|&;<>"
+	got, err := renderer.RenderString(input, externalResolver{"secret": secret})
+	if err != nil {
+		t.Fatalf("RenderString error: %v", err)
+	}
+	want := "EXT=\\|\\&\\;\\<\\>\n"
+	if got != want {
+		t.Fatalf("rendered output = %q, want %q", got, want)
+	}
+}
+
+// [EVT-MNU-4]
+func TestRender_BareAdjacencyWithExtendedEscapes(t *testing.T) {
+	t.Helper()
+	// Adjacency to surrounding literals; extended escapes preserved with backslashes
+	input := "X=pre<pass:secret>suf\n"
+	secret := "|&;<>"
+	got, err := renderer.RenderString(input, externalResolver{"secret": secret})
+	if err != nil {
+		t.Fatalf("RenderString error: %v", err)
+	}
+	want := "X=pre\\|\\&\\;\\<\\>suf\n"
+	if got != want {
+		t.Fatalf("rendered output = %q, want %q", got, want)
 	}
 }
 

@@ -22,7 +22,7 @@ Notes:
 - "Whitespace" in this specification means Space (U+0020) and Tab (U+0009) only. Any other Unicode whitespace where whitespace is expected is a parse error (exit code 103 — Template parsing failure; subcode assignment follows `docs/errors.md`; see Section 4.5).
 - Non-ASCII Unicode is allowed in values/PATH except where restricted (NUL/line terminators/separators). ABNF is ASCII-oriented; Unicode acceptance is defined by these notes.
 - NUL (U+0000) is prohibited. Template inputs containing NUL MUST be rejected as parse errors (exit code 103 — Template parsing failure). Resolver-provided values containing NUL are runtime errors (exit code 104 — Resolver failures) per Section 6.2.
- - ALPHA, DIGIT, and related core terminals are those defined by RFC 5234 (ABNF core rules).
+- ALPHA, DIGIT, and related core terminals are those defined by RFC 5234 (ABNF core rules).
 
 ### D.2 File & Elements
 ```

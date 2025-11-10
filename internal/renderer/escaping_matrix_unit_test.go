@@ -144,7 +144,7 @@ func TestRender_AllowNewlineMatrix(t *testing.T) {
 			name:      "BareWithAllowTab",
 			template:  "VAL=<pass:secret|allow_tab>\n",
 			secret:    "a\tb",
-			expectSub: "a\\\tb",
+			expectSub: "a\tb",
 		},
 		{
 			name:     "BareWithNewline",
@@ -267,5 +267,57 @@ func TestRender_UnicodeAcceptanceMatrix(t *testing.T) {
 				t.Fatalf("rendered output %q missing secret %q", got, tc.secret)
 			}
 		})
+	}
+}
+
+// [EVT-MEU-5]
+func TestRender_BareLeadingTildeEscaped(t *testing.T) {
+	t.Helper()
+	got, err := renderer.RenderString("VAL=<pass:s>\n", externalResolver{"s": "~abc"})
+	if err != nil {
+		t.Fatalf("RenderString error: %v", err)
+	}
+	want := "VAL=\\~abc\n"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+// [EVT-MEU-6]
+func TestRender_BareNonLeadingTildeUnescaped(t *testing.T) {
+	t.Helper()
+	got, err := renderer.RenderString("VAL=<pass:s>\n", externalResolver{"s": "a~b"})
+	if err != nil {
+		t.Fatalf("RenderString error: %v", err)
+	}
+	want := "VAL=a~b\n"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+// [EVT-MEU-7]
+func TestRender_BareLeadingTabThenTilde_WithAllowTab_TildeNotEscaped(t *testing.T) {
+	t.Helper()
+	got, err := renderer.RenderString("VAL=<pass:s|allow_tab>\n", externalResolver{"s": "\t~x"})
+	if err != nil {
+		t.Fatalf("RenderString error: %v", err)
+	}
+	want := "VAL=\t~x\n"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+// [EVT-MEU-8]
+func TestRender_BareLeadingTildeAfterEmptyToken(t *testing.T) {
+	t.Helper()
+	got, err := renderer.RenderString("VAL=<pass:empty><pass:tilde>\n", externalResolver{"empty": "", "tilde": "~xyz"})
+	if err != nil {
+		t.Fatalf("RenderString error: %v", err)
+	}
+	want := "VAL=\\~xyz\n"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
 	}
 }

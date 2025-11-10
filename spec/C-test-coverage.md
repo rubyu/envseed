@@ -37,7 +37,7 @@ This specification assigns a stable, semantic identifier to every test item in A
 - Specification: Each item in Appendix C MUST start with its EVT identifier in the canonical form:
   `EVT-<S><F><M>-<n> - <concise item title>`
 - Tests: Implementations MUST include the corresponding EVT identifier in an adjacent comment so failures can be searched and traced to this specification.
- - For compact formatting, implementers MAY wrap identifiers as "[EVT-…]" (see Section C.2.3.1). Both forms are equivalent for conformance.
+- For compact formatting, implementers MAY wrap identifiers as "[EVT-…]" (see Section C.2.3.1). Both forms are equivalent for conformance.
 - Each item SHOULD include a "Refs:" line naming the relevant normative sections. Appendices MAY be included as informative references. Example: "Refs: Sections 4, 4.1, 4.5; Appendix B (Informative)".
 - Item text MUST follow a simple template where applicable:
   - Success: expected successful behavior
@@ -136,12 +136,27 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 ##### Unit
 - [EVT-MEU-1] Per-context escaping minimality (Section 5.3.3): double-quoted (`\"`, `\\`, `$`, and `` ` `` only); `$(...)` (`\\`, `$`, and placeholder-originated `)` only); backtick (`` ` ``, `\\`, and `$` only).
 - [EVT-MEU-2] Bare literalization (Sections 4.1, 5.3.3, 5.3.4): backslash preserves literal meaning for SPACE, #, $, quotes, backslash, brackets; top-level # odd/even rule.
+- [EVT-MEU-4] Renderer/Bare: minimal escape set compliance (Sections 5.3.3–5.3.4)
+  Verify that the renderer, in Bare context, escapes exactly the characters mandated by Section 5.3.3 (Always‑escape matrix) and does not introduce escapes for other characters (except when modifiers or context rules require). Construct synthetic secrets covering:
+  - Always‑escape set: SPACE, #, $, ", ', `, \\, (, ), {, }, [, ], |, &, ;, <, >
+  - Non‑escape exemplars: ASCII letters/digits/underscore/dot/dash; selected punctuation not listed in the matrix
+  Assertions:
+  - Characters in the Always‑escape set MUST be escaped.
+  - Characters outside the set MUST remain unescaped (unless the chosen modifier/context requires otherwise).
+  [Refs: Sections 5.3.3, 5.3.4; Appendix A.2; Appendix D.4]
+- [EVT-MEU-5] Bare leading tilde (Sections 5.3.3–5.3.4): when the first emitted code point of the RHS is `~`, the renderer MUST escape it as `\~` to prevent tilde expansion by shells that `source` `.env`.
+- [EVT-MEU-6] Bare non-leading tilde (Sections 5.3.3–5.3.4): a `~` that is not the first emitted code point of the RHS MUST remain unescaped.
+- [EVT-MEU-7] Bare leading TAB then tilde with `allow_tab` (Sections 5.2, 5.3.2, 5.3.4): with `allow_tab` present, a leading TAB is emitted as-is; a subsequent `~` is not the first emitted code point and MUST therefore remain unescaped.
+- [EVT-MEU-8] Bare start-of-word tracking across tokens (Sections 5.3.3–5.3.4): if leading tokens render an empty string (e.g., empty literal/placeholder after strip), and the next token’s first code point is `~`, the renderer MUST treat it as the first emitted code point and escape it as `\\~`.
 ##### Property
 - [EVT-MEP-1] Escaping closure (Section 5.3.3): neither over- nor under-escaping across contexts.
 - [EVT-MEP-2] Comment detection stability (Section 4.1): top-level # odd/even backslashes; quoted/$(...)/backtick interiors unaffected.
 - [EVT-MEP-3] Re-parse on rendered output (Sections 5.1, 5.4): when `dangerously_bypass_escape` is absent, the rendered output MUST pass parser validation.
+- [EVT-MEP-4] Bare conformance property (Sections 5.3.3–5.3.4): for random secrets over {ASCII graph, spaces, tabs, `|&;<>`, quotes, parens, brackets, braces, backticks, `$`, backslashes, `~`} with/without `allow_tab`, escaping MUST equal matrix ∪ conditional; `parse -> render -> parse` MUST be stable.
+
 ##### Fuzz
 - [EVT-MEF-1] Prohibited controls stress (Section 5.3.1): inject controls and NUL per the acceptance rules in C.4.U; focus validation on context-local escaping minimality and comment detection invariants.
+- [EVT-MEF-2] Bare extended set fuzz (Sections 5.3.3–5.3.4): generate combinations over `{SPACE, TAB (with/without allow_tab), #, $, ", ', `, \\, (, ), {, }, [, ], |, &, ;, <, >, ~}` with adjacency to literals/placeholders; assert matrix ∪ conditional escapes only; stable re-parse and (when applicable) `bash -n` success.
 
 #### C.4.W Whitespace and Newlines
 ##### Unit
@@ -157,6 +172,8 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 ##### Property
 - [EVT-MWP-1] CRLF as a single logical newline (Sections 1.1, 4): parity with LF in representable contexts; rejection elsewhere.
 - [EVT-MWP-2] Leading whitespace preservation (Sections 3, 4.1, 4.4, 7.2): leading spaces/TABs for assignments and whole-line comments preserved.
+- [EVT-MWU-3] Target .env grammar-level whitespace (Sections 1.2, 7.6): non-ASCII whitespace MUST be rejected only where grammar-level whitespace is expected (leading indentation for blank/comment/assignment). Unicode whitespace within value string segments MUST be accepted and MUST NOT raise `EVE-107-101`.
+  [Refs: Sections 1.2, 7.6; Appendix D.1]
 - [EVT-MWP-3] Strip-family behavior reference (Section 5.2): trimming semantics and idempotence are covered under C.4.P. This family verifies only interaction with newline/TAB allowances and representation constraints.
 - [EVT-MWP-4] Newline with allow_newline (Sections 5.3.2, 5.3.4-5.3.8): acceptance/denial by context; positions and mixed runs; trailing-newline flag stability.
 - [EVT-MWP-5] TAB with allow_tab (Section 5.3.2): acceptance/denial across contexts; adjacency with spaces; placeholder vs literal origin.
@@ -228,6 +245,8 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 - [EVT-MNU-1] $(...) closer boundary (Section 5.3.7): placeholder-originated ) escaped as \); syntactic closers unescaped; re-parse succeeds.
 - [EVT-MNU-2] Bare adjacency with surrounding literals (Sections 4.1, 5.1, 5.3.3-5.3.4): when a bare placeholder is immediately adjacent to literal text on either side (prefix and/or suffix), and the resolved value contains any character outside the bare-safe set `[A-Za-z0-9_.-]` (subject to TAB/newline/control prohibitions and base64 allowances), the renderer MUST preserve lexical boundaries by emitting a backslash before each such character per Section 5.3.3 (Bare). Rendering MUST succeed and the result MUST re-parse identically. Example: Input `EXAMPLE_VAR=prefix<pass:a>suffix`, `<pass:a>` -> ` value` (leading space), expectation: `EXAMPLE_VAR=prefix\ valuesuffix`.
 - [EVT-MNU-3] Bare adjacency (positive complement) (Sections 4.1, 5.1, 5.3.3-5.3.4): when the resolved value consists solely of the bare-safe set (or permitted base64 characters when `|base64>` is present: `[A-Za-z0-9+/=]`), adjacency to surrounding literals MUST render successfully and re-parse identically. Example (positive): Input `EXAMPLE_VAR=prefix<pass:a>suffix`, `<pass:a>` -> `safe123`, expectation: `EXAMPLE_VAR=prefixsafe123suffix`.
+- [EVT-MNU-4] Bare adjacency with extended escapes (Sections 5.3.3-5.3.4): when adjacency exists and the resolved value contains any of `|`, `&`, `;`, `<`, `>`, renderer MUST backslash-escape each such character; result MUST re-parse identically; with `allow_tab`, TAB MUST be emitted as-is.
+  [Refs: Sections 5.3.3, 5.3.4]
 ##### Property
 - [EVT-MNP-1] $(...) nesting (Section 5.3.7): depths 1-3; placeholder-originated ) escaped; syntactic closers unescaped.
 - [EVT-MNP-2] Bare boundaries (Sections 4.1, 5.3.3-5.3.4): line start/end, pre-comment, adjacency to placeholders.
@@ -249,25 +268,67 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 - [EVT-MZU-2] Resolver failures: expectations follow Appendix B / `docs/errors.md` (exit code 104; display labels per Section 7.11).
 - [EVT-MZU-3] Multi-appearance reuse: repeated PATHs across lines/adjacent placeholders MUST hit the in-process cache (no duplicate resolutions).
 - [EVT-MZU-4] Call-count constraint: For a template containing the same PATH multiple times (across lines and adjacency), the underlying resolver/Pass client MUST be invoked at most once per unique PATH per render pass. Suites MUST use an instrumented PassClient that counts Show calls to assert this.
- - [EVT-MZU-5] Adjacency and cross-line cases: Suites MUST include both `<pass:dup><pass:dup>` adjacency and duplicates across separate lines to verify cache hits in distinct parse positions.
+- [EVT-MZU-5] Adjacency and cross-line cases: Suites MUST include both `<pass:dup><pass:dup>` adjacency and duplicates across separate lines to verify cache hits in distinct parse positions.
   - [EVT-MZU-6] Resolver raw vs renderer normalization (Sections 5.1, 6.2): The resolver MUST return the raw value unchanged, and the renderer MUST perform the default EOF newline normalization. Suites MUST:
     - Use an instrumented PassClient double to return "abc\n" (and "abc\r\n") and assert that the renderer outputs "abc".
     - Assert single-resolution policy (Show called at most once per PATH per render pass) and separation of concerns: the resolver output includes trailing newline(s); the renderer output reflects exactly-one trailing newline removal.
+
+#### C.4.I I/O and Path
+##### Unit
+- [EVT-MIU-1] Stat errno classifier mapping (Unix/mac)
+  Map os.Lstat errors to EVE-102-B0: ENOENT -> EVE-102-1; ENOTDIR -> EVE-102-3; ELOOP -> EVE-102-4; ENAMETOOLONG -> EVE-102-5; others -> EVE-102-203 fallback. Tested under Unix/mac; non-Unix builds provide fallback behavior.
+  [Refs: Sections 7.10.1, 7.3; docs/errors.md#eve-102-1, #eve-102-3, #eve-102-4, #eve-102-5, #eve-102-203]
     - See also: EVT-MZU-1 (caching policy), EVT-MWP-7 (ordering with modifiers).
 
-### C.5 Broader-Scope Tests
+### C.5 Broader‑Scope Tests
+#### C.5.E Context and Escaping
+##### Unit
+- [EVT-BEU-1] Bare/minimal escape set via sandboxed bash (source)
+  Using a sandboxed bash (when available), validate that `.env` produced by the renderer for Bare context survives `set -a; . <env>` and preserves values. Build a matrix of representative single‑character secrets and short strings:
+  - Always‑escape candidates: SPACE, #, $, ", ', `, \\, (, ), {, }, [, ]
+  - Additional shell meta probes (for investigation): |, &, ;, <, >
+  Procedure:
+  1) Render assignments `VAR=<pass:...>` for each candidate (resolver double returns the candidate).
+  2) In sandboxed bash: `set -a; . <env>; declare -p VAR` and decode the value.
+  3) Assert: sourcing succeeds and decoded values equal the renderer’s intended values.
+  Environment: print `bash --version` (first line) and `shopt -p` for diagnostics; skip with a clear reason when sandbox/bash are unavailable.
+  Skip with an informational log when sandbox/bash are unavailable.
+  [Refs: Sections 5.3.3–5.3.4, 8.2, 8.5; Appendix F]
+
+- [EVT-BEU-2] Bare/negative probes for Always‑escape set (source)
+  Craft `.env` lines that intentionally remove escapes for a small representative subset of Always‑escape characters (e.g., SPACE, #, $, ", ', `, \\, {, }) and try `set -a; . <env>`.
+  Expectation:
+  - Sourcing fails (syntax error), or succeeds with an incorrect value (demonstrating why the character MUST be escaped).
+  Notes:
+  - Run only under sandbox and stable bash settings; collect `bash --version` and `shopt -p` for diagnostics.
+  [Refs: Sections 5.3.3–5.3.4, 8.5; Appendix F]
+
+- [EVT-BEU-3] Bare/allow_tab behavior under source
+  For TAB in secrets, verify:
+  - Without `allow_tab`: rendering fails with the appropriate render‑time error (EVE‑105‑502).
+  - With `allow_tab`: renderer emits TAB as‑is; `set -a; . <env>` succeeds and `VAR` contains a literal TAB.
+  [Refs: Sections 5.2, 5.3.4; Appendix A.2]
+
+##### Property
+- [EVT-BEP-1] Cross‑check: renderer vs measured minimal escape set (source)
+  Compute an empirical minimal escape set by probing single characters and short pairs under `set -a; . <env>` and comparing pre/post values. Include adjacency positions {line start, middle, end} with ASCII alnum prefix/suffix where applicable. Assert that the renderer’s Always‑escape behavior matches the measured set:
+  - If the renderer under‑escapes (measured set minus renderer set ≠ ∅): FAIL (dangerous).
+  - If the renderer over‑escapes (renderer set minus measured set ≠ ∅): report as over‑escaping; treat as FAIL unless the specification explicitly mandates the larger set.
+  Skip in environments without sandbox/bash; log the reason.
+  [Refs: Sections 5.3.3–5.3.4, 8.2, 8.5; Appendix F]
 
 #### C.5.C CLI and UX
 ##### Unit
-- [EVT-BCU-1] CLI commands (Sections 7.2-7.4, 7.9): argument/flag validation for sync/diff/validate; unknown/missing/unsupported combinations.
+- [EVT-BCU-1] CLI commands (Sections 7.2-7.4, 7.9): argument/flag validation for sync/diff/validate; unknown/unsupported combinations; optional `[INPUT_FILE]` with default `./.envseed` when omitted.
 - [EVT-BCU-2] Streams and logging (Sections 6.4, 7.1): no stdout in non-dry-run; quiet suppresses info; diagnostics to stderr only; redaction in dry-run/diff.
 - [EVT-BCU-3] Sync message format (Sections 7.7, 7.1): on change wrote <path> (mode 0600); on no change wrote <path> (unchanged); --quiet suppresses info but never errors.
 - [EVT-BCU-4] Stdin not supported (Section 7.3): reading from stdin rejected with diagnostics; expected exit code 101. Display labels follow Section 7.11.
 - [EVT-BCU-5] validate specifics (Section 7.9): parse-only; input name need not contain envseed; for option validation semantics, see CLI commands above.
 - [EVT-BCU-6] diff behaviors (Section 7.8): missing target -> diff against empty (all additions, exit 1); identical files -> silent stdout/stderr and exit 0.
-- [EVT-BCU-7] sync dry-run output (Sections 6.3, 7.7): always include the resolved absolute effective output path (per Section 7.5) in the report, regardless of `--output`.
-- [EVT-BCU-8] Unified diff headers (Section 7.8): first two lines are `--- <path>` and `+++ <path>` where both `<path>` values are byte-identical absolute effective output paths (per Section 7.5); no prefixes or annotations. Body uses `@@` hunks per Section 7.8. See also C.5.S for redaction requirements.
+- [EVT-BCU-7] sync dry-run output (Sections 6.3, 7.7): always include the absolute resolved output path (per Section 7.5) in the report, regardless of `--output`.
+- [EVT-BCU-8] Unified diff headers (Section 7.8): first two lines are `--- <path>` and `+++ <path>` where both `<path>` values are byte-identical absolute resolved output paths (per Section 7.5); no prefixes or annotations. Body uses `@@` hunks per Section 7.8. See also C.5.S for redaction requirements.
 - [EVT-BCU-9] Render-time error display (Sections 7.11, 7.10): CLI diagnostics MUST include source line and MUST include column when tracked; formatting is stable and secrets are never revealed.
+- [EVT-BCU-10] Default input (Sections 7.3, 7.7–7.9): when `[INPUT_FILE]` is omitted and `./.envseed` exists, `sync`/`diff`/`validate` succeed using the default file.
 ##### Property
 - [EVT-BCP-1] Bash validation and sandbox gating (Sections 8.2, 8.5): When conditions in Section 8.2 are satisfied, suites MUST perform `bash -n` validation; otherwise suites MUST skip with an explicit reason (e.g., backticks present, missing bwrap, unsupported namespaces).
 - [EVT-BCP-2] Sandboxed execution: When a non-network, process-isolated sandbox is available, suites MUST execute rendered artifacts and capture observable state (e.g., selected environment variables) to validate end-to-end semantics. Execution MUST be gated by environment checks and MUST be skipped with an explicit reason when prerequisites are absent. Suites MUST ensure no secret exposure on stdout/stderr during execution.
@@ -284,13 +345,33 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 - [EVT-BIU-1] I/O and permissions (Sections 6.5, 7.7): atomic writes via rename; mode 0600; skip unchanged writes; refusing to overwrite without --force returns 106.
 - [EVT-BIU-2] Diff limits (Sections 7.8, 7.10): reject comparisons > 10 MiB; expected exit code 108.
 - [EVT-BIU-3] Path resolution logic (Section 7.5): --output handling; trailing separators; existing dir/file; missing parent; expected exit codes `101` / `106`.
-- [EVT-BIU-4] Name requirement (Sections 7.3, 7.5): for sync/diff without --output, <INPUT_FILE> must contain envseed.
-- [EVT-BIU-5] First-occurrence rule (Section 7.5): without --output, replace only the first envseed in <INPUT_FILE>.
+- [EVT-BIU-4] Name requirement (Sections 7.3, 7.5): for sync/diff without `--output`, the selected input name must contain `envseed`.
+- [EVT-BIU-5] First-occurrence rule (Section 7.5): without `--output`, replace only the first `envseed` in the selected input path.
+- [EVT-BIU-6] Default missing (Sections 7.3, 7.10): when `[INPUT_FILE]` is omitted and `./.envseed` is missing, return exit 102 with DetailCode EVE-102-1 (ENOENT). If the default path fails for other stat-phase reasons, classify per EVE-102-B0 (EISDIR/EVE-102-2; ENOTDIR/EVE-102-3; ELOOP/EVE-102-4; ENAMETOOLONG/EVE-102-5).
+- [EVT-BIU-7] ENOTDIR classification (EVE-102-3)
+  When a mid-path component is not a directory (e.g., <file>/subpath), sync/diff/validate return exit 102 with DetailCode EVE-102-3 (“selected input %q path component is not a directory”). No secret exposure in diagnostics.
+  [Refs: Sections 7.3, 7.7–7.9, 7.10.1, 7.11; docs/errors.md#eve-102-3]
+- [EVT-BIU-8] ELOOP classification (EVE-102-4)
+  When a symbolic link loop prevents resolution, sync/diff/validate return exit 102 with DetailCode EVE-102-4 (“selected input %q symlink loop detected”). No secret exposure in diagnostics.
+  [Refs: Sections 7.3, 7.7–7.9, 7.10.1, 7.11; docs/errors.md#eve-102-4]
+- [EVT-BIU-9] ENAMETOOLONG classification (EVE-102-5)
+  When a path (or a single component) exceeds the length limit, sync/diff/validate return exit 102 with DetailCode EVE-102-5 (“selected input %q name too long”). No secret exposure in diagnostics.
+  [Refs: Sections 7.3, 7.7–7.9, 7.10.1, 7.11; docs/errors.md#eve-102-5]
+- [EVT-BIU-10] Open vs Read failures (Section 7.3): injecting failures at open MUST return `EVE-102-201`; injecting failures at read MUST return `EVE-102-202`; permission MUST return `EVE-102-101`. Applies to `sync`, `diff`, and `validate`.
+  [Refs: Sections 7.3, 7.10.1; docs/errors.md#eve-102-201, #eve-102-202, #eve-102-101]
 ##### Property
 - [EVT-BIP-1] Path resolution branches (Section 7.5): cross-product over --output, directory/file/non-existent, trailing separator; expected exit codes `101` / `106`.
+- [EVT-BIP-2] Cross-command invariance for EVE-102-B0
+  For each stat-phase condition (ENOENT/EISDIR/ENOTDIR/ELOOP/ENAMETOOLONG), sync/diff/validate MUST produce exit 102 with the same DetailCode and stable diagnostic formatting. Test with both relative and absolute paths.
+  [Refs: Sections 7.3, 7.7–7.10, 7.10.1, 7.11; docs/errors.md#eve-102-1, #eve-102-2, #eve-102-3, #eve-102-4, #eve-102-5]
+- [EVT-BIP-3] Open/read separation (Section 7.3): across commands, induced open vs read failures MUST map consistently to `EVE-102-201` vs `EVE-102-202`; diagnostics MUST be stable per Section 7.11.
+  [Refs: Sections 7.3, 7.10.1, 7.11; docs/errors.md]
 ##### Fuzz
 - [EVT-BIF-1] Diff size limit boundary (Section 7.8): at/over 10 MiB threshold; exit 108 stability.
 - [EVT-BIF-2] I/O failure conditions: inject filesystem/permission and size-limit failures; verify exit `106/108`, CLI message, and guidance text. Subcodes follow `docs/errors.md` (no specific ranges listed here).
+- [EVT-BIF-3] Stat-phase errno discovery fuzz
+  Generate path constructs that trigger ENOTDIR/ELOOP/ENAMETOOLONG at the stat phase (without destructive operations). Assert exit 102 with EVE-102-3/4/5 respectively. Skip when filesystem semantics are unsupported (document reason).
+  [Refs: Sections 7.8, 7.10.1; docs/errors.md#eve-102-3, #eve-102-4, #eve-102-5; docs/testing/fuzz.md]
 
 #### C.5.S Security and Redaction
 ##### Property
@@ -299,6 +380,11 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 #### C.5.D Diagnostics and Error Mapping
 ##### Unit
 - [EVT-BDU-1] Parse-error diagnostics (Section 4.5): exit code 103 for template parsing failures; display format follows Section 7.11.
+- [EVT-BDU-2] EVE-102-B0 diagnostics mapping
+  For ENOTDIR/ELOOP/ENAMETOOLONG, CLI diagnostics MUST include the exact message text defined in docs/errors.md and the documentation link slug. Formatting MUST match Section 7.11 and MUST NOT reveal secrets.
+  [Refs: Sections 7.10.1, 7.11; docs/errors.md#eve-102-3, #eve-102-4, #eve-102-5]
+- [EVT-BDU-3] Target .env unexpected line mapping (Sections 7.6, 7.11): parser `EVE-103-103` MUST map to target parsing `EVE-107-1` with CLI diagnostics per Section 7.11 (no secret exposure; correct reference slug).
+  [Refs: Sections 7.6, 7.11; docs/errors.md#eve-107-1]
 ##### Fuzz
 - [EVT-BDF-1] Internal exception mapping (Section 7.10): induce unexpected exception; exit code 199; diagnostics formatting stability.
 - [EVT-BDF-2] Documentation link presence (Section 7.10): presence/format and consistency with docs/errors.md.
