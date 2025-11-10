@@ -16,15 +16,20 @@ Templates live in Git; secrets stay in `pass`.
 ## Demo
 
 ```sh
-cat > .envseed <<EOF
+# make a quick template file
+cat > .envseed <<'EOF'
 PASSWORD='<pass:www.example.com/password>'
 EOF
+```
 
+```sh
+# now just run it 🎬
 envseed sync
 cat .env
 ```
 
 ```sh
+# nice! you got:
 PASSWORD='vP9%cQ$m*Nqk'
 ```
 
