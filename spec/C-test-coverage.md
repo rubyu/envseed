@@ -46,7 +46,7 @@ This specification assigns a stable, semantic identifier to every test item in A
 
 ##### C.2.3.1 Compact Item Format
 Implementations MAY write each Appendix C test item using the following compact, machine- and human-readable format. The first line begins with a list dash.
-- [EVT-<S><F><M>-<n>] <concise item title>
+- [EVT-&lt;S&gt;&lt;F&gt;&lt;M&gt;-&lt;n&gt;] <concise item title>
   <single-sentence detail> (optional)
   [Refs: Sections x.y, x.y; Appendix B] (optional)
   [See also: EVT-XXXX - Short title, EVT-YYYY] (optional)
