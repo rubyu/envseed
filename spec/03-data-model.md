@@ -12,5 +12,5 @@ Value tokens record:
 - Kind: `Literal` or `Placeholder`.
 - Context: one of `bare`, `double_quoted`, `single_quoted`, `command_subst`, or `backtick`.
 - Text: verbatim literal text (for `Literal`) or raw placeholder text (for `Placeholder`). For placeholders, the raw text MUST include the surrounding angle brackets ("<" and ">") exactly as it appears in the template.
-- Path and Modifiers: parsed from `<pass:PATH|modifier[, modifier...]>`.
+- Path and Modifiers: parsed from placeholder tokens (for example "<pass://PATH|modifier[, modifier...]>") according to the syntax in Section 4.3.
 - Source position: line and column for diagnostics.

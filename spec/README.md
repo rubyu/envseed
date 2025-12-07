@@ -61,7 +61,7 @@ The key words `MUST`, `MUST NOT`, `SHOULD`, and `MAY` are to be interpreted as d
   - 10.4 Output Semantics
 - Appendix A. Examples as Fixtures (Informative) - [A-examples.md](A-examples.md)
   - A.1 Conventions
-  - A.2 Bare Context (`VAR=<pass:...>`)
+  - A.2 Bare Context (`VAR=<pass://...>`)
   - A.3 Double-Quoted (`VAR="..."`)
   - A.4 Single-Quoted (`VAR='...'`)
   - A.5 Command Substitution (`VAR=$(...)`)

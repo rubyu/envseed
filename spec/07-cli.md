@@ -262,4 +262,4 @@ These examples illustrate band selection and concrete-code assignment. Specific 
 - Examples (Informative):
   - `envseed ERROR [EVE-105-<subcode>]: <message>: line N[, column M]: placeholder <PATH>`
   - `envseed ERROR [EVE-105-<subcode>]: <message>\nAt: line N[, column M], placeholder <PATH>`
-  - When including placeholder strings in diagnostics (e.g., `<pass:...>`), the placeholder string MUST be masked and MUST NOT be emitted verbatim.
+- When including placeholder strings in diagnostics (e.g., "<pass://...>"), the placeholder string MUST be masked and MUST NOT be emitted verbatim.

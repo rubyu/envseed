@@ -33,7 +33,7 @@ Core entities:
 - Redaction: masking of secrets so that real secret values never appear on stdout, stderr, or logs. See Section 6.3 for policy and algorithm.
 
 Syntax and tokens:
-- Placeholder: an embedded token in the form `<pass:PATH|modifier[, modifier...]>`.
+- Placeholder: an embedded token in the form "<pass://PATH>" or "<pass://PATH|modifier[, modifier...]>"; see Section 4.3 and Appendix D.5 for placeholder syntax and PATH rules.
 - Context: one of `bare`, `double_quoted`, `single_quoted`, `command_subst`, `backtick`.
 - Modifier: one of `allow_newline`, `allow_tab`, `base64`, `dangerously_bypass_escape`, `strip`, `strip_left`, `strip_right`.
 - String segment: The content of a value on the right-hand side of an assignment excluding syntactic delimiters and operators. It excludes variable names, assignment operators, syntactic delimiters, and the top-level trailing comment introducer (`#`). For redaction semantics regarding string segments and escape pairs, see Section 6.3.

@@ -243,8 +243,8 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 #### C.4.N Nesting and Boundaries
 ##### Unit
 - [EVT-MNU-1] $(...) closer boundary (Section 5.3.7): placeholder-originated ) escaped as \); syntactic closers unescaped; re-parse succeeds.
-- [EVT-MNU-2] Bare adjacency with surrounding literals (Sections 4.1, 5.1, 5.3.3-5.3.4): when a bare placeholder is immediately adjacent to literal text on either side (prefix and/or suffix), and the resolved value contains any character outside the bare-safe set `[A-Za-z0-9_.-]` (subject to TAB/newline/control prohibitions and base64 allowances), the renderer MUST preserve lexical boundaries by emitting a backslash before each such character per Section 5.3.3 (Bare). Rendering MUST succeed and the result MUST re-parse identically. Example: Input `EXAMPLE_VAR=prefix<pass:a>suffix`, `<pass:a>` -> ` value` (leading space), expectation: `EXAMPLE_VAR=prefix\ valuesuffix`.
-- [EVT-MNU-3] Bare adjacency (positive complement) (Sections 4.1, 5.1, 5.3.3-5.3.4): when the resolved value consists solely of the bare-safe set (or permitted base64 characters when `|base64>` is present: `[A-Za-z0-9+/=]`), adjacency to surrounding literals MUST render successfully and re-parse identically. Example (positive): Input `EXAMPLE_VAR=prefix<pass:a>suffix`, `<pass:a>` -> `safe123`, expectation: `EXAMPLE_VAR=prefixsafe123suffix`.
+- [EVT-MNU-2] Bare adjacency with surrounding literals (Sections 4.1, 5.1, 5.3.3-5.3.4): when a bare placeholder is immediately adjacent to literal text on either side (prefix and/or suffix), and the resolved value contains any character outside the bare-safe set `[A-Za-z0-9_.-]` (subject to TAB/newline/control prohibitions and base64 allowances), the renderer MUST preserve lexical boundaries by emitting a backslash before each such character per Section 5.3.3 (Bare). Rendering MUST succeed and the result MUST re-parse identically. Example: Input `EXAMPLE_VAR=prefix<pass://a>suffix`, `<pass://a>` -> ` value` (leading space), expectation: `EXAMPLE_VAR=prefix\ valuesuffix`.
+- [EVT-MNU-3] Bare adjacency (positive complement) (Sections 4.1, 5.1, 5.3.3-5.3.4): when the resolved value consists solely of the bare-safe set (or permitted base64 characters when `|base64>` is present: `[A-Za-z0-9+/=]`), adjacency to surrounding literals MUST render successfully and re-parse identically. Example (positive): Input `EXAMPLE_VAR=prefix<pass://a>suffix`, `<pass://a>` -> `safe123`, expectation: `EXAMPLE_VAR=prefixsafe123suffix`.
 - [EVT-MNU-4] Bare adjacency with extended escapes (Sections 5.3.3-5.3.4): when adjacency exists and the resolved value contains any of `|`, `&`, `;`, `<`, `>`, renderer MUST backslash-escape each such character; result MUST re-parse identically; with `allow_tab`, TAB MUST be emitted as-is.
   [Refs: Sections 5.3.3, 5.3.4]
 ##### Property
@@ -268,7 +268,7 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 - [EVT-MZU-2] Resolver failures: expectations follow Appendix B / `docs/errors.md` (exit code 104; display labels per Section 7.11).
 - [EVT-MZU-3] Multi-appearance reuse: repeated PATHs across lines/adjacent placeholders MUST hit the in-process cache (no duplicate resolutions).
 - [EVT-MZU-4] Call-count constraint: For a template containing the same PATH multiple times (across lines and adjacency), the underlying resolver/Pass client MUST be invoked at most once per unique PATH per render pass. Suites MUST use an instrumented PassClient that counts Show calls to assert this.
-- [EVT-MZU-5] Adjacency and cross-line cases: Suites MUST include both `<pass:dup><pass:dup>` adjacency and duplicates across separate lines to verify cache hits in distinct parse positions.
+  - [EVT-MZU-5] Adjacency and cross-line cases: Suites MUST include both "<pass://dup><pass://dup>" adjacency and duplicates across separate lines to verify cache hits in distinct parse positions.
   - [EVT-MZU-6] Resolver raw vs renderer normalization (Sections 5.1, 6.2): The resolver MUST return the raw value unchanged, and the renderer MUST perform the default EOF newline normalization. Suites MUST:
     - Use an instrumented PassClient double to return "abc\n" (and "abc\r\n") and assert that the renderer outputs "abc".
     - Assert single-resolution policy (Show called at most once per PATH per render pass) and separation of concerns: the resolver output includes trailing newline(s); the renderer output reflects exactly-one trailing newline removal.
@@ -288,7 +288,7 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
   - Always‑escape candidates: SPACE, #, $, ", ', `, \\, (, ), {, }, [, ]
   - Additional shell meta probes (for investigation): |, &, ;, <, >
   Procedure:
-  1) Render assignments `VAR=<pass:...>` for each candidate (resolver double returns the candidate).
+  1) Render assignments `VAR=<pass://...>` for each candidate (resolver double returns the candidate).
   2) In sandboxed bash: `set -a; . <env>; declare -p VAR` and decode the value.
   3) Assert: sourcing succeeds and decoded values equal the renderer’s intended values.
   Environment: print `bash --version` (first line) and `shopt -p` for diagnostics; skip with a clear reason when sandbox/bash are unavailable.

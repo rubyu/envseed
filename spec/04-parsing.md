@@ -21,15 +21,14 @@
 
 ### 4.3 Placeholder Syntax (EnvSeed Extension)
 - Form
-  - A placeholder MUST be either `<pass:PATH>` or `<pass:PATH|modifier[, modifier...]>`.
+  - A placeholder MUST be either "<pass://PATH>" or "<pass://PATH|modifier[, modifier...]>".
   
   Note: The rules in this section apply to the placeholder body only and do not affect the lexical preservation policy for template text outside placeholders (see Section 4.4).
 - Sigil strictness
-  - The leading token MUST be exactly `<pass:`.
-  - Whitespace between `pass` and `:` (e.g., `<pass :`) MUST NOT occur; encountering it MUST be reported as a parse error with source position (see Section 4.5). For this rule, `whitespace` means ASCII SPACE (U+0020) and TAB (U+0009) only. Line terminators (CR U+000D, LF U+000A) are also prohibited within the sigil.
-- Whitespace handling
-  - Trimming and separator-adjacent whitespace MUST follow Appendix D.5 (Space/Tab only; newlines prohibited). Violations are parse errors (exit code 103); see Section 4.5.
-- Grammar for placeholders (sigil strictness, Space/Tab only around separators and PATH trimming, modifier list) is defined in Appendix D.5. PATH MAY contain non-ASCII Unicode except NUL/line terminators/separators; see Appendix D.5 notes.
+  - A placeholder sigil MUST start with the literal sequence "<pass://" with no intervening whitespace. Implementations MUST NOT treat any other `<pass...>` sequence as a valid placeholder.
+  - Placeholder-like sequences that violate these sigil rules (for example, `<pass` not followed by `://`, or whitespace inserted between `pass` and `://`) MUST be reported as parse errors with source position; see Section 4.5 for error classification and diagnostics.
+- Whitespace and PATH rules
+  - Detailed rules for PATH characters, whitespace trimming around PATH and separators, and the full placeholder grammar (including modifiers) are defined in Appendix D.5. Implementations MUST follow that grammar.
 - Recognized modifiers (case-sensitive)
   - `allow_newline`
   - `allow_tab`
@@ -39,27 +38,12 @@
   - `strip_left`
   - `strip_right`
 - Parse-time validation
-  - Unknown, duplicate, or empty modifiers MUST be reported as parse errors.
-  - The placeholder body MUST NOT contain newlines (LF/CR/CRLF) or NUL. Input that crosses lines before reaching `>` MUST be reported as a parse error.
+  - Placeholder syntax errors (for example, empty/unknown/duplicate modifiers, invalid PATH, or the presence of newlines or NUL inside the placeholder body) MUST be reported as parse errors with exit code 103. The precise grammar and character-level rules are defined in Appendix D.5.
 - Relation to context (reference)
   - A placeholder MUST record the occurrence context (bare/double/single/command/backtick). Per-context allowance/forbiddance/escaping rules MUST follow Section 5.3.
-- Accepted examples (valid)
-  - `<pass:path>`
-  - `<pass: path >`  (Space/Tab-only trimming is permitted; see Appendix D.5)
-  - `<pass:path|allow_tab>`
-  - `<pass:path | allow_tab , allow_newline >`
-  - `<pass:path|strip>`
-  - `<pass:path|strip_left,allow_tab>`
-  - `<pass:path | strip_right , allow_newline >`
-- Rejected examples (invalid)
-  - `<pass : path>` (whitespace inside sigil)
-  - `<pass:>` (empty PATH)
-  - `<pass:path|>` (empty modifier)
-  - `<pass:path|strip,>` (trailing empty modifier)
-  - `<pass:path|strip,strip>` (duplicate modifier)
-  - `<pass:path\n|strip>` (contains newline)
-  - `<pass:path|base64,strip>` (valid syntax; invalid combination at render time — see Section 5.2)
-  - `<pass:path|dangerously_bypass_escape,strip>` (valid syntax; invalid combination at render time — see Section 5.2)
+- Examples
+  - Example (valid): `VAR=<pass://service/api-token>`.
+  - Example (invalid): `VAR=<pass://>` (empty PATH; see Appendix A.7 for placeholder syntax error examples).
 
 ### 4.4 Determinism and Preservation
 - Lexical preservation: implementations MUST preserve whitespace, escape sequences, and original fragments as written, except where explicitly specified otherwise.
@@ -68,7 +52,7 @@
 
 ### 4.5 Parse Errors and Diagnostics
 - Parse error subjects: invalid assignment names; unterminated quotes/command substitutions/backticks; placeholder syntax errors (empty/unknown/duplicate modifiers, invalid PATH, presence of newline or NUL, etc.).
-- Sigil violation: if the parser encounters the sequence `<pass` followed by any whitespace prior to `:`, it MUST raise a parse error at the position of the offending character. The diagnostic MUST identify the sigil violation (whitespace between `pass` and `:`) and include source position (line and column).
+- Sigil violation: placeholder sigil errors (for example, `<pass` not followed by `://` or whitespace inserted between `pass` and `://`) MUST be reported as parse errors with source position (line and column). Exact sigil rules are defined in Section 4.3 and Appendix D.5, and diagnostics SHOULD recommend rewriting the token using the `<pass://PATH>` placeholder form (see Section 7.11).
 - Space/Tab-only whitespace violations: whitespace recognized by this specification is limited to ASCII Space (U+0020) and Tab (U+0009). The following MUST be classified as parse errors (exit code 103). See Section 7.10 and `docs/errors.md` for subcode assignment.
   - Use of any other Unicode whitespace in leading whitespace at line start.
   - Use of any other Unicode whitespace around placeholder separators (`|`, `,`, `>`), or adjacent to `PATH` for trimming.

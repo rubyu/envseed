@@ -20,7 +20,7 @@ NON-EOL  = %x01-09 / %x0B-0C / %x0E-7F
 ```
 Notes:
 - "Whitespace" in this specification means Space (U+0020) and Tab (U+0009) only. Any other Unicode whitespace where whitespace is expected is a parse error (exit code 103 — Template parsing failure; subcode assignment follows `docs/errors.md`; see Section 4.5).
-- Non-ASCII Unicode is allowed in values/PATH except where restricted (NUL/line terminators/separators). ABNF is ASCII-oriented; Unicode acceptance is defined by these notes.
+- Non-ASCII Unicode is allowed except where restricted by context-specific rules (for example, PATH and whitespace trimming rules in Appendix D.5). ABNF is ASCII-oriented; Unicode acceptance is defined by these notes and per-section notes.
 - NUL (U+0000) is prohibited. Template inputs containing NUL MUST be rejected as parse errors (exit code 103 — Template parsing failure). Resolver-provided values containing NUL are runtime errors (exit code 104 — Resolver failures) per Section 6.2.
 - ALPHA, DIGIT, and related core terminals are those defined by RFC 5234 (ABNF core rules).
 
@@ -76,7 +76,7 @@ Note (Informative): This ABNF captures structural boundaries only. Emission/esca
 
 ### D.5 Placeholder
 ```
-placeholder = "<pass:" path [ *WSP "|" *WSP modifiers ] *WSP ">"
+placeholder = "<pass://" path [ *WSP "|" *WSP modifiers ] *WSP ">"
 path        = 1*( path-char )
 modifiers   = modifier *( *WSP "," *WSP modifier )
 modifier    = "allow_newline"
@@ -86,21 +86,10 @@ modifier    = "allow_newline"
             / "strip"
             / "strip_left"
             / "strip_right"
-; path-char excludes NUL, CR, LF, '|' and '>' (separators)
-; ASCII non-separators (exclude '>' %x3E and '|' %x7C)
-ASCII-NONSEP = %x01-09 / %x0B-0C / %x0E-3D / %x3F-7B / %x7D-7F
-; UTF-8 multi-byte sequences (RFC 3629) excluding surrogates and out-of-range values
-UTF8-2     = %xC2-DF %x80-BF
-UTF8-3     = %xE0 %xA0-BF %x80-BF
-           / %xE1-EC %x80-BF %x80-BF
-           / %xED %x80-9F %x80-BF
-           / %xEE-EF %x80-BF %x80-BF
-UTF8-4     = %xF0 %x90-BF %x80-BF %x80-BF
-           / %xF1-F3 %x80-BF %x80-BF %x80-BF
-           / %xF4 %x80-8F %x80-BF %x80-BF
-path-char  = ASCII-NONSEP / UTF8-2 / UTF8-3 / UTF8-4
+path-char  = IRI-PATH-CHAR
 ```
 Notes:
-- PATH MAY contain non-ASCII Unicode (UTF-8). Accept any code point except NUL/line terminators; separators `|`, `>` are forbidden within PATH. Trimming/around-separators whitespace is Space (U+0020) and Tab (U+0009) only.
-- Sigil strictness: `<pass` MUST be followed immediately by `:` with no whitespace; violations are parse errors with source position (see Section 4.5).
-- The ABNF above admits UTF-8 code points in PATH (excluding NUL/line terminators and the separators `|`, `>`). Implementations MUST reject any Unicode whitespace other than Space (U+0020) and Tab (U+0009) where trimming or around-separator whitespace is expected (see Sections 4.3 and 4.5).
+- PATH is treated as the `//authority` and `ipath-abempty` portion of an IRI with scheme `pass` (see RFC 3987). Implementations MUST choose PATH such that the concatenation "pass://PATH" forms a syntactically valid IRI without query or fragment components.
+- EnvSeed does not interpret query or fragment components inside PATH. Callers MUST choose PATH so that literal `?`, `#`, `|`, and `>` do not appear unencoded inside PATH; when these characters need to be represented as data, callers SHOULD use standard IRI percent-encoding. Trimming and around-separator whitespace is Space (U+0020) and Tab (U+0009) only.
+- Sigil strictness: `<pass` MUST be followed immediately by `://` with no whitespace; violations are parse errors with source position (see Section 4.5).
+- Implementations MUST reject any Unicode whitespace other than Space (U+0020) and Tab (U+0009) where trimming or around-separator whitespace is expected (see Sections 4.3 and 4.5).
