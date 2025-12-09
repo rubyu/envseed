@@ -24,10 +24,20 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Install ripgrep
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
+
       - name: Install bubblewrap (for sandbox tests)
         run: |
           sudo apt-get update
           sudo apt-get install -y bubblewrap
+
+      - name: Disable AppArmor restrictions for unprivileged userns
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_unconfined=0 || true
 
       - name: Pre-commit (docs, tests, vet, EVT check)
         run: make pre-commit
