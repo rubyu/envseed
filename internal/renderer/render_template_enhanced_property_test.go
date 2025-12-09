@@ -102,7 +102,7 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 	}{
 		{
 			name:     "BareBase64AllowsSpecialCharacters",
-			template: "TOKEN=<pass:secret|base64>\n",
+			template: "TOKEN=<pass://secret|base64>\n",
 			resolver: externalResolver{
 				"secret": string([]byte{0xfb, 0xfe}),
 			},
@@ -112,14 +112,14 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 		},
 		{
 			name:       "BareBase64InvalidComboAllowTab",
-			template:   "TOKEN=<pass:secret|base64,allow_tab>\n",
+			template:   "TOKEN=<pass://secret|base64,allow_tab>\n",
 			resolver:   externalResolver{"secret": string([]byte{0xfb, 0xfe})},
 			expectErr:  true,
 			expectCode: "EVE-105-601",
 		},
 		{
 			name:     "BareTabWithModifier",
-			template: "VALUE=<pass:secret|allow_tab>\n",
+			template: "VALUE=<pass://secret|allow_tab>\n",
 			resolver: externalResolver{"secret": "tab\tvalue"},
 			checks: []checkFn{
 				requireContains("VALUE=tab\tvalue"),
@@ -127,14 +127,14 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 		},
 		{
 			name:       "BareTabWithoutModifierFails",
-			template:   "VALUE=<pass:secret>\n",
+			template:   "VALUE=<pass://secret>\n",
 			resolver:   externalResolver{"secret": "tab\tvalue"},
 			expectErr:  true,
 			expectCode: "EVE-105-502",
 		},
 		{
 			name:     "BareIndexAssignmentWithBase64",
-			template: "ARRAY[1]+=<pass:secret|base64>\n",
+			template: "ARRAY[1]+=<pass://secret|base64>\n",
 			resolver: externalResolver{"secret": string([]byte{0xfb})},
 			checks: []checkFn{
 				checkBase64Chars("+", "="),
@@ -142,7 +142,7 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 		},
 		{
 			name:     "DoubleQuotedNewlineAllowed",
-			template: "MESSAGE=\"prefix <pass:secret|allow_newline> suffix\"\n",
+			template: "MESSAGE=\"prefix <pass://secret|allow_newline> suffix\"\n",
 			resolver: externalResolver{"secret": "line1\nline2"},
 			checks: []checkFn{
 				requireContains("line1\nline2"),
@@ -150,14 +150,14 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 		},
 		{
 			name:       "DoubleQuotedNewlineMissingModifier",
-			template:   "MESSAGE=\"<pass:secret>\"\n",
+			template:   "MESSAGE=\"<pass://secret>\"\n",
 			resolver:   externalResolver{"secret": "line1\nline2"},
 			expectErr:  true,
 			expectCode: "EVE-105-201",
 		},
 		{
 			name:     "CommandSubstitutionAllowTab",
-			template: "SCRIPT=$(printf %s <pass:secret|allow_tab>)\n",
+			template: "SCRIPT=$(printf %s <pass://secret|allow_tab>)\n",
 			resolver: externalResolver{"secret": "tab\tcmd"},
 			checks: []checkFn{
 				requireContains("tab\tcmd"),
@@ -165,28 +165,28 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 		},
 		{
 			name:       "CommandSubstitutionMissingModifier",
-			template:   "SCRIPT=$(printf %s <pass:secret>)\n",
+			template:   "SCRIPT=$(printf %s <pass://secret>)\n",
 			resolver:   externalResolver{"secret": "line1\nline2"},
 			expectErr:  true,
 			expectCode: "EVE-105-301",
 		},
 		{
 			name:       "BacktickNewlineDisallowed",
-			template:   "LEGACY=`echo <pass:secret|allow_newline>`\n",
+			template:   "LEGACY=`echo <pass://secret|allow_newline>`\n",
 			resolver:   externalResolver{"secret": "line1\nline2"},
 			expectErr:  true,
 			expectCode: "EVE-105-404",
 		},
 		{
 			name:       "DangerouslyCannotCombineModifiers",
-			template:   "RAW=<pass:secret|dangerously_bypass_escape,allow_tab>\n",
+			template:   "RAW=<pass://secret|dangerously_bypass_escape,allow_tab>\n",
 			resolver:   externalResolver{"secret": "raw"},
 			expectErr:  true,
 			expectCode: "EVE-105-601",
 		},
 		{
 			name:     "DoubleQuotedBase64",
-			template: "TOKEN=\"value:<pass:secret|base64>\"\n",
+			template: "TOKEN=\"value:<pass://secret|base64>\"\n",
 			resolver: externalResolver{"secret": "abc"},
 			checks: []checkFn{
 				requireContains("TOKEN=\"value:YWJj\""),
@@ -194,7 +194,7 @@ func TestPlaceholderModifierMatrix(t *testing.T) {
 		},
 		{
 			name:       "DoubleQuotedBase64InvalidCombo",
-			template:   "TOKEN=\"<pass:secret|base64,allow_tab,allow_newline>\"\n",
+			template:   "TOKEN=\"<pass://secret|base64,allow_tab,allow_newline>\"\n",
 			resolver:   externalResolver{"secret": "value"},
 			expectErr:  true,
 			expectCode: "EVE-105-601",
@@ -487,7 +487,7 @@ func lineEnhancedBase64Bare(r *rand.Rand, state *enhancedState, mode enhancedMod
 	b.WriteString(head)
 	path := nextEnhancedSecretPath(state)
 	secret := enhancedBase64Secret(r)
-	b.WriteString("<pass:")
+	b.WriteString("<pass://")
 	b.WriteString(path)
 	b.WriteString("|base64>")
 	if mode == modeGrammarFocus && r.Intn(2) == 0 {
@@ -509,7 +509,7 @@ func lineEnhancedBase64InvalidCombo(r *rand.Rand, state *enhancedState, mode enh
 	head := buildEnhancedAssignmentHead(r, name, mode == modeGrammarFocus || r.Intn(2) == 0)
 	b.WriteString(head)
 	path := nextEnhancedSecretPath(state)
-	b.WriteString("<pass:")
+	b.WriteString("<pass://")
 	b.WriteString(path)
 	b.WriteString("|base64,allow_tab>")
 	b.WriteString("\n")
@@ -737,7 +737,7 @@ func lineEnhancedDanglingPlaceholder(r *rand.Rand, state *enhancedState, mode en
 	name := nextEnhancedVarName(state)
 	head := buildEnhancedAssignmentHead(r, name, mode == modeGrammarFocus || r.Intn(2) == 0)
 	b.WriteString(head)
-	b.WriteString("<pass:unterminated")
+	b.WriteString("<pass://unterminated")
 	b.WriteString("\n")
 	return enhancedLine{
 		text:      b.String(),
@@ -820,10 +820,10 @@ func buildEnhancedAssignmentHead(r *rand.Rand, base string, allowAdvanced bool) 
 
 func buildEnhancedPlaceholder(r *rand.Rand, path string, modifiers []string) string {
 	if len(modifiers) == 0 {
-		return fmt.Sprintf("<pass:%s>", path)
+		return fmt.Sprintf("<pass://%s>", path)
 	}
 	var b strings.Builder
-	b.WriteString("<pass:")
+	b.WriteString("<pass://")
 	b.WriteString(path)
 	b.WriteString("|")
 	for i, mod := range modifiers {

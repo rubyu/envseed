@@ -45,17 +45,18 @@ func Available() (bool, error) {
 func Run(script string) (string, error) {
 	// Locate bwrap and bash
 	if _, err := exec.LookPath("bwrap"); err != nil {
-		return "", fmt.Errorf("%w: bwrap not found", ErrUnsupported)
+		return "", &UnavailableError{Reason: ErrNotInstalled, Stage: "lookup_bwrap", Cause: err}
 	}
 	bashPath, err := exec.LookPath("bash")
 	if err != nil {
-		return "", fmt.Errorf("bash not found: %w", err)
+		return "", &UnavailableError{Reason: ErrBashMissing, Stage: "lookup_bash", Cause: err}
 	}
 
 	// Discover shared library dependencies for bash via ldd.
 	libs, err := detectBashLibs(bashPath)
 	if err != nil {
-		return "", fmt.Errorf("%w: %v", ErrUnsupported, err)
+		// classify dependency/ldd issues under dependencies missing
+		return "", &UnavailableError{Reason: ErrDepsMissing, Stage: "ldd", Stderr: err.Error(), Cause: err}
 	}
 
 	// Base sandbox args and minimal filesystem
@@ -127,13 +128,18 @@ func Run(script string) (string, error) {
 	err = cmd.Run()
 	if err != nil {
 		stderrMsg := strings.TrimSpace(stderr.String())
-		if strings.Contains(stderrMsg, "No permissions to create new namespace") {
-			return stdout.String(), fmt.Errorf("%w: %s", ErrUnsupported, stderrMsg)
+		lower := strings.ToLower(stderrMsg)
+		// Map common permission failures to specific reasons.
+		if strings.Contains(lower, "no permissions to create new namespace") ||
+			strings.Contains(lower, "permission denied") ||
+			strings.Contains(lower, "operation not permitted") {
+			return stdout.String(), &UnavailableError{Reason: ErrNamespaceDenied, Stage: "run", Stderr: stderrMsg, Cause: err}
 		}
-		if strings.Contains(stderrMsg, "bwrap:") && strings.Contains(stderrMsg, "Permission denied") {
-			return stdout.String(), fmt.Errorf("%w: %s", ErrUnsupported, stderrMsg)
+		if strings.Contains(lower, "netlink_route") || strings.Contains(lower, "loopback") {
+			return stdout.String(), &UnavailableError{Reason: ErrNetlinkRouteDenied, Stage: "run", Stderr: stderrMsg, Cause: err}
 		}
-		return stdout.String(), fmt.Errorf("bwrap failed: %w (stderr: %s)", err, stderrMsg)
+		// Unknown bwrap failure → generic unavailable with stderr for diagnosis.
+		return stdout.String(), &UnavailableError{Reason: ErrUnavailable, Stage: "run", Stderr: stderrMsg, Cause: err}
 	}
 	return stdout.String(), nil
 }

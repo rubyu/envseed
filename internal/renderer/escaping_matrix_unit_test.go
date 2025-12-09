@@ -20,28 +20,28 @@ func TestRender_ContextEscapingMatrix(t *testing.T) {
 	}{
 		{
 			name:     "BareEscapesSpacesAndHashes",
-			template: "VAL=<pass:secret>\n",
+			template: "VAL=<pass://secret>\n",
 			secret:   "value #$",
 			expect:   []string{`value\ `, `\#`, `\$`},
 			forbid:   []string{"value #"},
 		},
 		{
 			name:     "DoubleQuotedEscapesMinimal",
-			template: `VAL="<pass:secret>"` + "\n",
+			template: `VAL="<pass://secret>"` + "\n",
 			secret:   "# \" \\ $ `",
 			expect:   []string{`"# `, `\"`, `\\`, `\$`, "\\`"},
 			forbid:   []string{`\#`},
 		},
 		{
 			name:     "CommandSubstitutionEscapesClosingParen",
-			template: "VAL=$(echo <pass:secret>)\n",
+			template: "VAL=$(echo <pass://secret>)\n",
 			secret:   "value)$",
 			expect:   []string{`\)`, `\$`},
 			forbid:   []string{"value)"},
 		},
 		{
 			name:     "BacktickContextEscapesTickAndBackslash",
-			template: "VAL=`echo <pass:secret>`\n",
+			template: "VAL=`echo <pass://secret>`\n",
 			secret:   "`value\\",
 			expect:   []string{"\\`", `\\`},
 			forbid:   nil,
@@ -90,7 +90,7 @@ func TestRender_BareHashDoesNotBecomeComment(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			out, err := renderer.RenderString("VAL=<pass:secret>\n", externalResolver{"secret": tc.secret})
+			out, err := renderer.RenderString("VAL=<pass://secret>\n", externalResolver{"secret": tc.secret})
 			if err != nil {
 				t.Fatalf("RenderString error: %v", err)
 			}
@@ -129,26 +129,26 @@ func TestRender_AllowNewlineMatrix(t *testing.T) {
 	}{
 		{
 			name:      "DoubleQuotedWithModifier",
-			template:  "VAL=\"<pass:secret|allow_newline>\"\n",
+			template:  "VAL=\"<pass://secret|allow_newline>\"\n",
 			secret:    "line1\nline2",
 			expectSub: "line1\nline2",
 		},
 		{
 			name:     "DoubleQuotedWithoutModifier",
-			template: "VAL=\"<pass:secret>\"\n",
+			template: "VAL=\"<pass://secret>\"\n",
 			secret:   "line1\nline2",
 			wantErr:  true,
 			code:     "EVE-105-201",
 		},
 		{
 			name:      "BareWithAllowTab",
-			template:  "VAL=<pass:secret|allow_tab>\n",
+			template:  "VAL=<pass://secret|allow_tab>\n",
 			secret:    "a\tb",
 			expectSub: "a\tb",
 		},
 		{
 			name:     "BareWithNewline",
-			template: "VAL=<pass:secret>\n",
+			template: "VAL=<pass://secret>\n",
 			secret:   "line1\nline2",
 			wantErr:  true,
 			code:     "EVE-105-501",
@@ -184,31 +184,31 @@ func TestRender_ControlCharacterRejectionMatrix(t *testing.T) {
 	}{
 		{
 			name:     "BareContext",
-			template: "VAL=<pass:secret>\n",
+			template: "VAL=<pass://secret>\n",
 			secret:   ctrlSecret,
 			code:     "EVE-105-503",
 		},
 		{
 			name:     "DoubleQuotedContext",
-			template: "VAL=\"<pass:secret>\"\n",
+			template: "VAL=\"<pass://secret>\"\n",
 			secret:   ctrlSecret,
 			code:     "EVE-105-203",
 		},
 		{
 			name:     "CommandSubstitutionContext",
-			template: "VAL=$(echo <pass:secret>)\n",
+			template: "VAL=$(echo <pass://secret>)\n",
 			secret:   ctrlSecret,
 			code:     "EVE-105-303",
 		},
 		{
 			name:     "BacktickContext",
-			template: "VAL=`echo <pass:secret>`\n",
+			template: "VAL=`echo <pass://secret>`\n",
 			secret:   ctrlSecret,
 			code:     "EVE-105-403",
 		},
 		{
 			name:     "SingleQuotedContext",
-			template: "VAL='<pass:secret>'\n",
+			template: "VAL='<pass://secret>'\n",
 			secret:   ctrlSecret,
 			code:     "EVE-105-104",
 		},
@@ -232,27 +232,27 @@ func TestRender_UnicodeAcceptanceMatrix(t *testing.T) {
 	}{
 		{
 			name:     "BareNonASCII",
-			template: "VAL=<pass:secret>\n",
+			template: "VAL=<pass://secret>\n",
 			secret:   "値段アルファ",
 		},
 		{
 			name:     "DoubleQuotedEmoji",
-			template: "VAL=\"<pass:secret>\"\n",
+			template: "VAL=\"<pass://secret>\"\n",
 			secret:   "café ☕",
 		},
 		{
 			name:     "CommandSubstitutionCyrillic",
-			template: "VAL=$(echo <pass:secret>)\n",
+			template: "VAL=$(echo <pass://secret>)\n",
 			secret:   "данные",
 		},
 		{
 			name:     "SingleQuotedArabic",
-			template: "VAL='<pass:secret>'\n",
+			template: "VAL='<pass://secret>'\n",
 			secret:   "مرحبا",
 		},
 		{
 			name:     "BacktickHebrew",
-			template: "VAL=`echo <pass:secret>`\n",
+			template: "VAL=`echo <pass://secret>`\n",
 			secret:   "עברית",
 		},
 	}
@@ -273,7 +273,7 @@ func TestRender_UnicodeAcceptanceMatrix(t *testing.T) {
 // [EVT-MEU-5]
 func TestRender_BareLeadingTildeEscaped(t *testing.T) {
 	t.Helper()
-	got, err := renderer.RenderString("VAL=<pass:s>\n", externalResolver{"s": "~abc"})
+	got, err := renderer.RenderString("VAL=<pass://s>\n", externalResolver{"s": "~abc"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}
@@ -286,7 +286,7 @@ func TestRender_BareLeadingTildeEscaped(t *testing.T) {
 // [EVT-MEU-6]
 func TestRender_BareNonLeadingTildeUnescaped(t *testing.T) {
 	t.Helper()
-	got, err := renderer.RenderString("VAL=<pass:s>\n", externalResolver{"s": "a~b"})
+	got, err := renderer.RenderString("VAL=<pass://s>\n", externalResolver{"s": "a~b"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}
@@ -299,7 +299,7 @@ func TestRender_BareNonLeadingTildeUnescaped(t *testing.T) {
 // [EVT-MEU-7]
 func TestRender_BareLeadingTabThenTilde_WithAllowTab_TildeNotEscaped(t *testing.T) {
 	t.Helper()
-	got, err := renderer.RenderString("VAL=<pass:s|allow_tab>\n", externalResolver{"s": "\t~x"})
+	got, err := renderer.RenderString("VAL=<pass://s|allow_tab>\n", externalResolver{"s": "\t~x"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}
@@ -312,7 +312,7 @@ func TestRender_BareLeadingTabThenTilde_WithAllowTab_TildeNotEscaped(t *testing.
 // [EVT-MEU-8]
 func TestRender_BareLeadingTildeAfterEmptyToken(t *testing.T) {
 	t.Helper()
-	got, err := renderer.RenderString("VAL=<pass:empty><pass:tilde>\n", externalResolver{"empty": "", "tilde": "~xyz"})
+	got, err := renderer.RenderString("VAL=<pass://empty><pass://tilde>\n", externalResolver{"empty": "", "tilde": "~xyz"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"envseed/internal/sandbox"
 	"envseed/internal/testsupport"
 )
 
@@ -89,12 +88,4 @@ func TestParseDeclareLine(t *testing.T) {
 
 // [EVT-BCP-2]
 // Smoke-check sandbox availability under build tag
-func TestSandboxAvailableSmoke(t *testing.T) {
-	ok, err := sandbox.Available()
-	if err != nil {
-		t.Skipf("sandbox not available: %v", err)
-	}
-	if !ok {
-		t.Skip("sandbox reports unavailable")
-	}
-}
+func TestSandboxAvailableSmoke(t *testing.T) { testsupport.RequireSandbox(t) }

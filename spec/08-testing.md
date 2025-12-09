@@ -3,7 +3,7 @@
 ### 8.1 Deterministic Unit Tests
 - CLI default input handling: Suites MUST include cases where `[INPUT_FILE]` is omitted and the default `./.envseed` is used (success) and missing (exit code 102). Suites MUST also include cases where the selected input name does not contain `envseed` without `--output` (exit code 101) and where `--output` is provided.
 - Parser rules: MUST cover assignment names, arrays, `+=`, comments (whole-line and trailing), and placeholder syntax (unknown/duplicate/empty modifiers, invalid PATH, presence of newline/NUL).
-- Parser rules (sigil strictness): MUST reject any whitespace between `pass` and `:` in `<pass:...>`; diagnostics include line and column (see Sections 4.3 and 4.5).
+- Parser rules (URL scheme strictness): MUST treat `<pass://` as the only valid placeholder URL and MUST reject any whitespace between `pass` and `://` and any legacy token that begins with `<pass:` but does not continue with `//`; diagnostics including line and column follow Sections 4.3 and 4.5.
 - Target parsing: MUST verify that target `.env` files (A/B) follow the same grammar (assignments/comments/blank lines). Lines outside this grammar MUST raise parse errors with line and column. No heuristic masking is permitted on parse failure.
 - Renderer context rules: MUST cover success/failure, escaping, and interactions of `base64`/`dangerously_bypass_escape`/`allow_*` across contexts (bare/double/single/command/backtick).
 - Single-quoted: MUST cover acceptance (no `'`, no newline, TAB only with the `allow_tab` modifier) and rejection (`'` present, newline present, control characters, TAB without permission).
@@ -31,7 +31,7 @@
 - Where tools like bubblewrap are available, implementations MUST evaluate environment variable values and verify they match expectations. When the necessary tools or namespaces are unavailable, this step MUST be skipped with an informational log stating the unavailability and reason.
 
 ### 8.6 Resolver Doubles & Failure Injection
-- Suites MUST provide doubles that simulate paths such as missing `pass`, `pass show` failure, missing entry, and presence of NUL.
+- Suites MUST provide doubles that simulate paths such as missing `pass`, `pass` failure, missing entry, and presence of NUL.
 - Suites MUST verify that each PATH is resolved at most once (cache effectiveness).
 
 ### 8.7 Test Identifiers in Tests

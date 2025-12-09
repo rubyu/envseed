@@ -17,7 +17,7 @@ func TestDiffDetectsChangesAndMasksSecrets(t *testing.T) {
 
 	dir := t.TempDir()
 	input := filepath.Join(dir, ".envseed")
-	if err := os.WriteFile(input, []byte("TOKEN=<pass:token|strip_right>\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("TOKEN=<pass://token|strip_right>\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 	output := filepath.Join(dir, ".env")
@@ -56,7 +56,7 @@ func TestDiffNoChanges(t *testing.T) {
 
 	dir := t.TempDir()
 	input := filepath.Join(dir, ".envseed")
-	if err := os.WriteFile(input, []byte("TOKEN=<pass:token|strip_right>\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("TOKEN=<pass://token|strip_right>\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 	output := filepath.Join(dir, ".env")
@@ -144,7 +144,7 @@ func TestDiffRejectsLargeOutputs(t *testing.T) {
 
 	dir := t.TempDir()
 	input := filepath.Join(dir, ".envseed")
-	if err := os.WriteFile(input, []byte("TOKEN=<pass:token|strip_right>\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("TOKEN=<pass://token|strip_right>\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 

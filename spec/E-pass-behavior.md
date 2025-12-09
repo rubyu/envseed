@@ -1,14 +1,14 @@
-## Appendix E. Pass Behavior: pass show semantics and whitespace (Informative)
+## Appendix E. Pass Behavior: pass semantics and whitespace (Informative)
 
 ### E.1 Scope and Sources
 - Scope. This appendix documents the behavior of the upstream password-store implementation (pass) relevant to EnvSeed's renderer and resolver. This appendix is informative; normative requirements remain in Sections 5.1 and 6.2.
 - Sources. Upstream repository zx2c4/password-store (commit 3ca13cd8882cae4083c1c478858adbf2e82dd037), pass(1) man page in that repository.
 
-### E.2 pass show (stdout)
-- pass show prints the decrypted file bytes exactly as stored. It does not trim or add whitespace; trailing newlines and spaces are preserved.
+### E.2 pass (stdout)
+- pass prints the decrypted file bytes exactly as stored. It does not trim or add whitespace; trailing newlines and spaces are preserved.
 - Rationale. The implementation base64-encodes the decrypted stream into a shell variable and decodes back to stdout, preserving bytes including trailing newline(s).
 
-### E.3 pass show --clip/--qrcode
+### E.3 pass --clip/--qrcode
 - When --clip or --qrcode is used, pass selects a single line and omits its trailing newline; spaces within the line are preserved.
 - Implementation detail. A tail/head pipeline selects the requested line; command substitution strips the line-ending newline, and the clipboard/QR emission uses echo -n, preventing a newline from being added.
 
@@ -18,9 +18,9 @@
 - pass generate writes the generated password with a trailing newline at EOF.
 
 ### E.5 Examples
-- 'abc\n' -> pass show prints with trailing LF.
-- 'abc\r\n\r\n' -> pass show prints with two trailing CRLF sequences.
-- 'a\nb\n' -> pass show prints with an internal newline and a trailing newline.
+- 'abc\n' -> pass prints with trailing LF.
+- 'abc\r\n\r\n' -> pass prints with two trailing CRLF sequences.
+- 'a\nb\n' -> pass prints with an internal newline and a trailing newline.
 - With --clip/--qrcode on a line that ends with a newline, the newline is not included in the copied/encoded value; spaces in the line are preserved.
 
 ### E.6 Interactions with EnvSeed

@@ -102,14 +102,14 @@ func TestRender_SingleQuotedCorpusCases(t *testing.T) {
 		{
 			name: "ok_allow_tab",
 			prop: propertyTemplate{
-				Template: "VAR='<pass:secret|allow_tab>'\n",
+				Template: "VAR='<pass://secret|allow_tab>'\n",
 				Resolver: externalResolver{"secret": "hello\tworld"},
 			},
 		},
 		{
 			name: "fail_newline",
 			prop: propertyTemplate{
-				Template: "VAR='<pass:secret>'\n",
+				Template: "VAR='<pass://secret>'\n",
 				Resolver: externalResolver{"secret": "line1\nline2"},
 				Expect:   propertyExpectation{ShouldErr: true, DetailCode: "EVE-105-102", Phase: failurePhaseRender},
 			},
@@ -117,7 +117,7 @@ func TestRender_SingleQuotedCorpusCases(t *testing.T) {
 		{
 			name: "fail_contains_quote",
 			prop: propertyTemplate{
-				Template: "VAR='<pass:secret>'\n",
+				Template: "VAR='<pass://secret>'\n",
 				Resolver: externalResolver{"secret": "O'Connor"},
 				Expect:   propertyExpectation{ShouldErr: true, DetailCode: "EVE-105-101", Phase: failurePhaseRender},
 			},

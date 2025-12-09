@@ -28,9 +28,9 @@ func randPlaceholder(r *rand.Rand) string {
 	path := paths[r.Intn(len(paths))]
 	m := mods[r.Intn(len(mods))]
 	if len(m) == 0 {
-		return fmt.Sprintf("<pass:%s>", path)
+		return fmt.Sprintf("<pass://%s>", path)
 	}
-	return fmt.Sprintf("<pass:%s|%s>", path, strings.Join(m, ","))
+	return fmt.Sprintf("<pass://%s|%s>", path, strings.Join(m, ","))
 }
 
 func randValueBare(r *rand.Rand, idx int) string {

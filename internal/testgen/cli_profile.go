@@ -45,9 +45,9 @@ func (p *CLISemanticsProfile) Generate(r *rand.Rand, _ uint32) Case {
 		resolver[path] = value
 		// keep to bare/double to avoid sandbox or bash nuances
 		if r.Intn(2) == 0 {
-			b.WriteString(name + op + "<pass:" + path + ">\n")
+			b.WriteString(name + op + "<pass://" + path + ">\n")
 		} else {
-			b.WriteString(name + op + "\"<pass:" + path + ">\"\n")
+			b.WriteString(name + op + "\"<pass://" + path + ">\"\n")
 		}
 	}
 	return Case{Template: b.String(), Resolver: resolver}

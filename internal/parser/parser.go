@@ -438,14 +438,10 @@ func scanValue(s *scanner) ([]ast.ValueToken, string, bool, error) {
 		}
 
 		if !escaped {
-			if strings.HasPrefix(s.src[s.pos:], "<pass") {
+			if strings.HasPrefix(s.src[s.pos:], "<pass") && !strings.HasPrefix(s.src[s.pos:], "<pass://") {
 				check := *s
 				check.advance(len("<pass"))
-				if !check.eof() {
-					if r2, _ := check.peek(); r2 == ' ' || r2 == '\t' || r2 == '\n' || r2 == '\r' {
-						return nil, "", false, newParseError(check.line, check.col, "EVE-103-4", "sigil violation: whitespace between 'pass' and ':'")
-					}
-				}
+				return nil, "", false, newParseError(check.line, check.col, "EVE-103-4", "invalid placeholder URL near '<pass'")
 			}
 			placeholderLine := s.line
 			placeholderCol := s.col
@@ -614,20 +610,10 @@ func scanPlaceholderLiteral(src string, start int) (string, []string, int, bool,
 	if start >= len(src) {
 		return "", nil, 0, false, nil
 	}
-	// Sigil detection: "<pass" followed by whitespace before ':' is a violation (EVE-103-4)
-	if strings.HasPrefix(src[start:], "<pass") && !strings.HasPrefix(src[start:], "<pass:") {
-		j := start + len("<pass")
-		if j < len(src) {
-			r := rune(src[j])
-			if unicode.IsSpace(r) {
-				return "", nil, 0, false, newParseIssue("EVE-103-4", "whitespace between 'pass' and ':' (sigil violation)")
-			}
-		}
-	}
-	if !strings.HasPrefix(src[start:], "<pass:") {
+	if !strings.HasPrefix(src[start:], "<pass://") {
 		return "", nil, 0, false, nil
 	}
-	i := start + len("<pass:")
+	i := start + len("<pass://")
 	if i >= len(src) {
 		return "", nil, 0, false, newParseIssue("EVE-103-202", "unterminated placeholder")
 	}
@@ -653,6 +639,9 @@ func scanPlaceholderLiteral(src string, start int) (string, []string, int, bool,
 			if strings.IndexByte(path, 0) >= 0 {
 				return "", nil, 0, false, newParseIssue("EVE-103-203", "placeholder path contains NUL")
 			}
+			if strings.IndexAny(path, "?#") >= 0 {
+				return "", nil, 0, false, newParseIssue("EVE-103-206", "placeholder PATH is not a valid IRI authority + path")
+			}
 			return path, nil, i - start + 1, true, nil
 		case '|':
 			if i == pathStart {
@@ -668,6 +657,9 @@ func scanPlaceholderLiteral(src string, start int) (string, []string, int, bool,
 			}
 			if strings.IndexByte(path, 0) >= 0 {
 				return "", nil, 0, false, newParseIssue("EVE-103-203", "placeholder path contains NUL")
+			}
+			if strings.IndexAny(path, "?#") >= 0 {
+				return "", nil, 0, false, newParseIssue("EVE-103-206", "placeholder PATH is not a valid IRI authority + path")
 			}
 			modStart := i + 1
 			j := modStart

@@ -92,7 +92,7 @@ func (p *RendererEnhancedProfile) Generate(r *rand.Rand, _ uint32) Case {
 		// prohibit obviously dangerous combos; leave exploration to fuzz
 		// format placeholder
 		var ph strings.Builder
-		ph.WriteString("<pass:")
+		ph.WriteString("<pass://")
 		ph.WriteString(path)
 		if len(c.mods) > 0 {
 			ph.WriteString("|")
