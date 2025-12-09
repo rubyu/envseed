@@ -152,8 +152,8 @@
 ## EVE-103-4
 
 - Exit code: `103`
-- CLI message: `invalid placeholder sigil near '<pass'`
-- Guidance: Sigil violation: placeholders MUST start with the literal sequence "<pass://" with no whitespace. Do not insert whitespace between "pass" and "://", and do not use the legacy "<pass:PATH>" syntax. For example: NG: "<pass ://path>", "<pass:path|...>". OK: "<pass://path|...>".
+- CLI message: `invalid placeholder URL near '<pass'`
+- Guidance: URL scheme violation: placeholders MUST start with the literal sequence "<pass://" with no whitespace. Do not insert whitespace between "pass" and "://", and do not use the legacy "<pass:PATH>" syntax. For example: NG: "<pass ://path>", "<pass:path|...>". OK: "<pass://path|...>".
 
 <a id="eve-103-101"></a>
 ## EVE-103-101

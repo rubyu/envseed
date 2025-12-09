@@ -91,5 +91,5 @@ path-char  = IRI-PATH-CHAR
 Notes:
 - PATH is treated as the `//authority` and `ipath-abempty` portion of an IRI with scheme `pass` (see RFC 3987). Implementations MUST choose PATH such that the concatenation "pass://PATH" forms a syntactically valid IRI without query or fragment components.
 - EnvSeed does not interpret query or fragment components inside PATH. Callers MUST choose PATH so that literal `?`, `#`, `|`, and `>` do not appear unencoded inside PATH; when these characters need to be represented as data, callers SHOULD use standard IRI percent-encoding. Trimming and around-separator whitespace is Space (U+0020) and Tab (U+0009) only.
-- Sigil strictness: `<pass` MUST be followed immediately by `://` with no whitespace; violations are parse errors with source position (see Section 4.5).
+- `<pass` MUST be followed immediately by `://` with no whitespace; violations are parse errors with source position (see Section 4.5).
 - Implementations MUST reject any Unicode whitespace other than Space (U+0020) and Tab (U+0009) where trimming or around-separator whitespace is expected (see Sections 4.3 and 4.5).

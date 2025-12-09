@@ -114,7 +114,7 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 #### C.4.P Placeholders and Modifiers
 ##### Unit
 - [EVT-MPU-1] Placeholder syntax and whitespace (Section 4.3): PATH trimming; tolerances around `|`, `,`, and immediately before `>`; unknown/duplicate/empty modifiers; newline/NUL in body.
-- [EVT-MPU-2] Sigil strictness (Section 4.3): treat "<pass://" as the only valid placeholder sigil. Sequences that begin with "<pass" but are not followed by "://", or that insert whitespace between "pass" and "://", MUST be rejected as parse errors with line and column diagnostics. Suites MUST include at least: "<pass://path>" (success), "<pass ://path>" (sigil violation), "<pass:path>" (legacy syntax rejected), and "<pass>" (incomplete sigil).
+- [EVT-MPU-2] URL scheme strictness (Section 4.3): treat "<pass://" as the only valid placeholder URL. Sequences that begin with "<pass" but are not followed by "://", or that insert whitespace between "pass" and "://", MUST be rejected as parse errors with line and column diagnostics. Suites MUST include at least: "<pass://path>" (success), "<pass ://path>" (URL scheme violation), "<pass:path>" (legacy syntax rejected), and "<pass>" (incomplete URL).
 - [EVT-MPU-3] Case sensitivity (Section 4.3): modifiers are case-sensitive; Allow_Tab is unknown.
 - [EVT-MPU-4] Modifier semantics (Section 5.2): strip-family -> base64 -> context checks; invalid combinations (unique subcodes); dangerously_bypass_escape behavior.
 - [EVT-MPU-5] Base64 fundamentals (Section 5.2): [A-Za-z0-9+/=], no wrapping; empty and varied lengths including non-ASCII sources.
@@ -127,7 +127,7 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 - [EVT-MPP-3] Base64 in bare context (Sections 5.2, 5.3.3): `+`, `/`, `=` MUST NOT be escaped; rendered output MUST remain reparsable.
 ##### Fuzz
 - [EVT-MPF-1] Placeholder body fuzz (Section 4.3): PATH/modifier spacing, unknown/duplicate/empty modifiers, newline/NUL in body.
-- [EVT-MPF-2] Near-sigil fuzz (Section 4.3): generate "<pass" followed by one of { ":", "/", SPACE, TAB, CR, LF, ALNUM, PUNCT } and assert that only "<pass://" leads into a valid placeholder, while all other "<pass..." sequences (including legacy "<pass:PATH>") produce a sigil violation with a specific DetailCode and accurate source position.
+- [EVT-MPF-2] Near-URL-scheme fuzz (Section 4.3): generate "<pass" followed by one of { ":", "/", SPACE, TAB, CR, LF, ALNUM, PUNCT } and assert that only "<pass://" leads into a valid placeholder, while all other "<pass..." sequences (including legacy "<pass:PATH>") produce a URL scheme violation with a specific DetailCode and accurate source position.
 - [EVT-MPF-3] Invalid modifier combinations (Section 5.2): render-time errors with unique subcodes.
 - [EVT-MPF-4] Base64 variety (Section 5.2): alphabet coverage; no line wrapping.
 - [EVT-MPF-5] Non-ASCII whitespace around PATH/modifiers (Sections 4.3, 4.5): trimming and list whitespace MUST reject non-ASCII whitespace with the appropriate DetailCode (`EVE-103-204`, `EVE-103-305`).

@@ -9,7 +9,7 @@ import (
 )
 
 // [EVT-MPF-2]
-func TestParser_NearSigilVariants(t *testing.T) {
+func TestParser_NearURLSchemeVariants(t *testing.T) {
 	t.Helper()
 
 	type tc struct {
@@ -22,7 +22,7 @@ func TestParser_NearSigilVariants(t *testing.T) {
 
 	cases := []tc{
 		{
-			name:    "ValidSigil",
+	        name:    "ValidURLScheme",
 			input:   "VAR=<pass://ok>\n",
 			wantErr: false,
 		},
@@ -68,17 +68,18 @@ func TestParser_NearSigilVariants(t *testing.T) {
 			if len(elems) != 1 || elems[0].Assignment == nil {
 				t.Fatalf("unexpected AST for input %q: %#v", tc.input, elems)
 			}
-			// When successful, ensure placeholder text contains the canonical sigil.
-			foundPlaceholder := false
-			for _, tok := range elems[0].Assignment.ValueTokens {
-				if strings.Contains(tok.Text, "<pass://") {
-					foundPlaceholder = true
-					break
-				}
-			}
-			if !foundPlaceholder {
-				t.Fatalf("expected placeholder token with '<pass://', input=%q AST=%#v", tc.input, elems)
-			}
+	            // When successful, ensure placeholder text contains the canonical URL scheme prefix.
+	            foundPlaceholder := false
+	            for _, tok := range elems[0].Assignment.ValueTokens {
+	                if strings.Contains(tok.Text, "<pass://") {
+	                    foundPlaceholder = true
+	                    break
+	                }
+	            }
+	            if !foundPlaceholder {
+	                t.Fatalf("expected placeholder token with '<pass://', input=%q AST=%#v", tc.input, elems)
+	            }
 		})
 	}
 }
+

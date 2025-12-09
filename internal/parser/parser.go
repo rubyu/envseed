@@ -441,7 +441,7 @@ func scanValue(s *scanner) ([]ast.ValueToken, string, bool, error) {
 			if strings.HasPrefix(s.src[s.pos:], "<pass") && !strings.HasPrefix(s.src[s.pos:], "<pass://") {
 				check := *s
 				check.advance(len("<pass"))
-				return nil, "", false, newParseError(check.line, check.col, "EVE-103-4", "invalid placeholder sigil near '<pass'")
+				return nil, "", false, newParseError(check.line, check.col, "EVE-103-4", "invalid placeholder URL near '<pass'")
 			}
 			placeholderLine := s.line
 			placeholderCol := s.col

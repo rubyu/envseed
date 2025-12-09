@@ -24,9 +24,9 @@
   - A placeholder MUST be either "<pass://PATH>" or "<pass://PATH|modifier[, modifier...]>".
   
   Note: The rules in this section apply to the placeholder body only and do not affect the lexical preservation policy for template text outside placeholders (see Section 4.4).
-- Sigil strictness
-  - A placeholder sigil MUST start with the literal sequence "<pass://" with no intervening whitespace. Implementations MUST NOT treat any other `<pass...>` sequence as a valid placeholder.
-  - Placeholder-like sequences that violate these sigil rules (for example, `<pass` not followed by `://`, or whitespace inserted between `pass` and `://`) MUST be reported as parse errors with source position; see Section 4.5 for error classification and diagnostics.
+- URL scheme strictness
+  - A placeholder URL MUST start with the literal sequence "<pass://" with no intervening whitespace. Implementations MUST NOT treat any other `<pass...>` sequence as a valid placeholder.
+  - Placeholder-like sequences that violate these URL scheme rules (for example, `<pass` not followed by `://`, or whitespace inserted between `pass` and `://`) MUST be reported as parse errors with source position; see Section 4.5 for error classification and diagnostics.
 - Whitespace and PATH rules
   - Detailed rules for PATH characters, whitespace trimming around PATH and separators, and the full placeholder grammar (including modifiers) are defined in Appendix D.5. Implementations MUST follow that grammar.
 - Recognized modifiers (case-sensitive)
@@ -52,7 +52,7 @@
 
 ### 4.5 Parse Errors and Diagnostics
 - Parse error subjects: invalid assignment names; unterminated quotes/command substitutions/backticks; placeholder syntax errors (empty/unknown/duplicate modifiers, invalid PATH, presence of newline or NUL, etc.).
-- Sigil violation: placeholder sigil errors (for example, `<pass` not followed by `://` or whitespace inserted between `pass` and `://`) MUST be reported as parse errors with source position (line and column). Exact sigil rules are defined in Section 4.3 and Appendix D.5, and diagnostics SHOULD recommend rewriting the token using the `<pass://PATH>` placeholder form (see Section 7.11).
+- URL scheme violation: placeholder URL errors (for example, `<pass` not followed by `://` or whitespace inserted between `pass` and `://`) MUST be reported as parse errors with source position (line and column). Exact URL scheme rules are defined in Section 4.3 and Appendix D.5, and diagnostics SHOULD recommend rewriting the token using the `<pass://PATH>` placeholder form (see Section 7.11).
 - Space/Tab-only whitespace violations: whitespace recognized by this specification is limited to ASCII Space (U+0020) and Tab (U+0009). The following MUST be classified as parse errors (exit code 103). See Section 7.10 and `docs/errors.md` for subcode assignment.
   - Use of any other Unicode whitespace in leading whitespace at line start.
   - Use of any other Unicode whitespace around placeholder separators (`|`, `,`, `>`), or adjacent to `PATH` for trimming.
