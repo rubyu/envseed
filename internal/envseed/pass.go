@@ -14,7 +14,8 @@ type PassCommand struct{}
 
 // Show retrieves PATH through pass.
 func (p *PassCommand) Show(ctx context.Context, path string) (string, error) {
-	cmd := exec.CommandContext(ctx, "pass", "show", path)
+	// Modern pass usage defaults to `show`, so `pass <PATH>` is sufficient.
+	cmd := exec.CommandContext(ctx, "pass", path)
 	// Connect stdin so that interactive pinentry can receive user input.
 	cmd.Stdin = os.Stdin
 	var stderr bytes.Buffer

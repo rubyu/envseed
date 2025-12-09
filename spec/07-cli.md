@@ -155,7 +155,7 @@ Error categories (101+):
 101 Invalid arguments or unknown/missing command
 102 Template read failure (I/O)
 103 Template parsing failure (.envseed -> AST)
-104 Resolver failures (missing `pass` binary; `pass show` I/O failure; entry not found; value contains NUL)
+104 Resolver failures (missing `pass` binary; `pass` I/O failure; entry not found; value contains NUL)
 105 Rendering failures (context/modifier issues) and post-render re-parse failure
 106 Output failures (sync write I/O: path preconditions, tmp write, rename, chmod, dry-run write)
 107 Target parsing failure (.env for A/B)
@@ -201,7 +201,7 @@ This section defines the band allocation for subcodes within each exit category.
 
 - 104 Resolver (pass)
   - EVE-104-B0 (1..99) — `pass` not installed
-  - EVE-104-B1 (101..199) — `pass show` failure (non-missing entry)
+  - EVE-104-B1 (101..199) — `pass` failure (non-missing entry)
   - EVE-104-B2 (201..299) — Missing `pass` entry
   - EVE-104-B3 (301..399) — Value contains unsupported characters (e.g., NUL)
 

@@ -306,8 +306,8 @@
 ## EVE-104-101
 
 - Exit code: `104`
-- CLI message: `pass show %q failed`
-- Guidance: The `pass` command returned an error for the requested entry. Run `pass show <PATH>` to see the underlying cause and resolve the issue such as a missing entry or a permission error.
+- CLI message: `pass %q failed`
+- Guidance: The `pass` command returned an error for the requested entry. Run `pass <PATH>` to see the underlying cause and resolve the issue such as a missing entry or a permission error.
 
 <a id="eve-104-201"></a>
 ## EVE-104-201

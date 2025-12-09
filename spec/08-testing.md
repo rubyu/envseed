@@ -31,7 +31,7 @@
 - Where tools like bubblewrap are available, implementations MUST evaluate environment variable values and verify they match expectations. When the necessary tools or namespaces are unavailable, this step MUST be skipped with an informational log stating the unavailability and reason.
 
 ### 8.6 Resolver Doubles & Failure Injection
-- Suites MUST provide doubles that simulate paths such as missing `pass`, `pass show` failure, missing entry, and presence of NUL.
+- Suites MUST provide doubles that simulate paths such as missing `pass`, `pass` failure, missing entry, and presence of NUL.
 - Suites MUST verify that each PATH is resolved at most once (cache effectiveness).
 
 ### 8.7 Test Identifiers in Tests

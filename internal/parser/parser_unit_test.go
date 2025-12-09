@@ -575,9 +575,9 @@ func TestParse_LegacyPlaceholderSyntaxRejected(t *testing.T) {
 	if perr.Line != 1 {
 		t.Fatalf("error line = %d, want 1", perr.Line)
 	}
-		if perr.Column <= 6 {
-			t.Fatalf("error column = %d, want to point near '<pass' URL scheme", perr.Column)
-		}
+	if perr.Column <= 6 {
+		t.Fatalf("error column = %d, want to point near '<pass' URL scheme", perr.Column)
+	}
 }
 
 // [EVT-MPF-6]

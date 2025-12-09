@@ -84,10 +84,10 @@ The key words `MUST`, `MUST NOT`, `SHOULD`, and `MAY` are to be interpreted as d
   - D.3 Name / Operator / Index
   - D.4 Value & Tokenization
   - D.5 Placeholder
-- Appendix E. Pass Behavior: pass show semantics and whitespace (Informative) - [E-pass-behavior.md](E-pass-behavior.md)
+- Appendix E. Pass Behavior: pass semantics and whitespace (Informative) - [E-pass-behavior.md](E-pass-behavior.md)
   - E.1 Scope and Sources
-  - E.2 pass show (stdout)
-  - E.3 pass show --clip/--qrcode
+  - E.2 pass (stdout)
+  - E.3 pass --clip/--qrcode
   - E.4 Entry creation and whitespace
   - E.5 Examples
   - E.6 Interactions with EnvSeed

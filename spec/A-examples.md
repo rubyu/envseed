@@ -1,7 +1,7 @@
 ## Appendix A. Examples as Fixtures (Informative)
 
 This appendix provides ready-to-use fixtures grouped by context and purpose. Unless stated otherwise:
-- pass output is shown with comments like `# pass show path => value`.
+- pass output is shown with comments like `# pass path => value`.
 - Each example indicates expected exit code where applicable (see Section 7.10) and references the normative section.
 
 ### A.1 Conventions
@@ -11,27 +11,27 @@ This appendix provides ready-to-use fixtures grouped by context and purpose. Unl
 ### A.2 Bare Context (`VAR=<pass://...>`)
 Status: Success (exit code 0)
 ```sh
-# pass show service/api-token => tokenValue
+# pass service/api-token => tokenValue
 API_TOKEN=<pass://service/api-token>
 
 # Base64 stays in the bare-allowed alphabet
 TOKEN_B64=<pass://service/token|base64>
 
 # Space and other special chars are backslash-escaped automatically per Section 5.3.3
-# pass show example => hello world
+# pass example => hello world
 VALUE_WITH_SPACE=<pass://example>    # renderer emits hello\ world (reparsable)
 ```
 - Style: values containing spaces are easier to read and maintain when quoted; prefer `VAR="<pass://...>"` for readability.
 
 Status: Failure (exit code 105)
 ```sh
-# pass show example => a\tb
+# pass example => a\tb
 VAR=<pass://example>                  # rendering error: TAB without allow_tab (bare; see Section 5.3.4)
 
-# pass show example => line1\nline2
+# pass example => line1\nline2
 VAR=<pass://example>                  # rendering error: newline unsupported (bare; see Section 5.3.4)
 
-# pass show example => ping\x01
+# pass example => ping\x01
 VAR=<pass://example>                  # rendering error: control character (bare; see Section 5.3.4)
 ```
 
@@ -50,38 +50,38 @@ MESSAGE="<pass://alert/body|allow_tab>"
 
 Status: Failure (exit code 105)
 ```sh
-# pass show val => line1\nline2
+# pass val => line1\nline2
 VAL="<pass://val>"                # rendering error: newline without allow_newline (double-quoted; see Section 5.3.5)
 
-# pass show val => hello\tworld
+# pass val => hello\tworld
 VAL="<pass://val>"                # rendering error: TAB without allow_tab (double-quoted; see Section 5.3.5)
 
-# pass show val => ping\x01
+# pass val => ping\x01
 VAL="<pass://val>"                # rendering error: control character (double-quoted; see Section 5.3.5)
 ```
 
 ### A.4 Single-Quoted (`VAR='...'`)
 Status: Success (exit code 0)
 ```sh
-# pass show example => abcDEF123
+# pass example => abcDEF123
 SINGLE_OK='<pass://example>'
 
-# pass show example_tab => hello\tworld
+# pass example_tab => hello\tworld
 SINGLE_OK_TAB='<pass://example_tab|allow_tab>'
 ```
 
 Status: Failure (exit code 105)
 ```sh
-# pass show example_quote => O'Connor
+# pass example_quote => O'Connor
 SINGLE_FAIL_QUOTE='<pass://example_quote>'    # rendering error: single quote not allowed (single-quoted; see Section 5.3.6)
 
-# pass show example_nl => line1\nline2
+# pass example_nl => line1\nline2
 SINGLE_FAIL_NL='<pass://example_nl>'          # rendering error: newline unsupported (single-quoted; see Section 5.3.6)
 
-# pass show example_tab => hello\tworld
+# pass example_tab => hello\tworld
 SINGLE_FAIL_TAB='<pass://example_tab>'        # rendering error: TAB without allow_tab (single-quoted; see Section 5.3.6)
 
-# pass show example_ctrl => ping\x07
+# pass example_ctrl => ping\x07
 SINGLE_FAIL_CTRL='<pass://example_ctrl>'      # rendering error: control character (single-quoted; see Section 5.3.6)
 
 SINGLE_FAIL_MOD='<pass://x|allow_newline>'    # rendering error: allow_newline unsupported (single-quoted; see Section 5.3.6)
@@ -90,32 +90,32 @@ SINGLE_FAIL_MOD='<pass://x|allow_newline>'    # rendering error: allow_newline u
 ### A.5 Command Substitution (`VAR=$(...)`)
 Status: Success (exit code 0)
 ```sh
-# pass show val => value)tail
+# pass val => value)tail
 CMD=$(printf %s <pass://val>)      # closing ')' is escaped as \)
 
-# pass show val => a\tb
+# pass val => a\tb
 CMD=$(printf %s <pass://val|allow_tab>)
 
-# pass show val => line1\nline2
+# pass val => line1\nline2
 CMD=$(printf %s <pass://val|allow_newline>)
  
 
 Status: Failure (exit code 105)
 ```sh
-# pass show val => line1\nline2
+# pass val => line1\nline2
 CMD=$(printf %s <pass://val>)      # rendering error: newline without allow_newline (command_subst; see Section 5.3.7)
 
-# pass show val => hello\tworld
+# pass val => hello\tworld
 CMD=$(printf %s <pass://val>)      # rendering error: TAB without allow_tab (command_subst; see Section 5.3.7)
 
-# pass show val => ping\x02
+# pass val => ping\x02
 CMD=$(printf %s <pass://val>)      # rendering error: control character (command_subst; see Section 5.3.7)
 ```
 
 ### A.6 Backtick (`` `...` ``)
 Status: Success (exit code 0)
 ```sh
-# pass show tok => a\tb
+# pass tok => a\tb
 STAMP=`echo <pass://tok|allow_tab>`
 ```
 Note:
@@ -123,24 +123,24 @@ Note:
 
 Additional examples
 ```sh
-# pass show tok_dollar => cost$100
+# pass tok_dollar => cost$100
 STAMP=`echo <pass://tok_dollar>`     # renderer emits cost\$100
 
-# pass show tok_bt => a`b
+# pass tok_bt => a`b
 STAMP=`echo <pass://tok_bt>`         # renderer emits a\`b
 
-# pass show tok_bs => C:\path
+# pass tok_bs => C:\path
 STAMP=`echo <pass://tok_bs>`         # renderer emits C:\\path
 ```
 
 Status: Failure (exit code 105)
 ```sh
-# pass show tok => line1\nline2
+# pass tok => line1\nline2
 STAMP=`echo <pass://tok>`          # rendering error: newline unsupported (backtick; see Section 5.3.8)
 
 STAMP=`echo <pass://tok|allow_newline>`   # rendering error: allow_newline unsupported (backtick; see Section 5.3.8)
 
-# pass show tok => ping\x03
+# pass tok => ping\x03
 STAMP=`echo <pass://tok>`          # rendering error: control character (backtick; see Section 5.3.8)
 ```
 
@@ -199,11 +199,11 @@ VAL="<pass://secret|strip_right>"
 ### A.9 Boundary / Edge Cases
 CRLF-terminated secret
 ```sh
-VAL="<pass://secret_crlf|allow_newline>"  # pass show => line1\r\nline2\r\n
+VAL="<pass://secret_crlf|allow_newline>"  # pass => line1\r\nline2\r\n
 ```
 Unicode / Emoji / Zero-width
 ```sh
-GREETING="<pass://greet>"  # pass show => こんにちは👋\u200b
+GREETING="<pass://greet>"  # pass => こんにちは👋\u200b
 ```
 Adjacent placeholders
 ```sh
