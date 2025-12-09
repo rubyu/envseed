@@ -22,8 +22,8 @@ func TestSyncSimpleReplacement(t *testing.T) {
 	input := filepath.Join(dir, ".envseed")
 	template := strings.Join([]string{
 		`# sample`,
-		`API_TOKEN=<pass:service/api-token|strip_right>`,
-		`MESSAGE="hello <pass:user|strip_right>"`,
+		`API_TOKEN=<pass://service/api-token|strip_right>`,
+		`MESSAGE="hello <pass://user|strip_right>"`,
 		`LOG_LEVEL=info`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(input, []byte(template), 0o600); err != nil {
@@ -84,7 +84,7 @@ func TestSyncRefusesOverwriteWithoutForce(t *testing.T) {
 
 	dir := t.TempDir()
 	input := filepath.Join(dir, ".envseed")
-	if err := os.WriteFile(input, []byte("TOKEN=<pass:path|strip_right>\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("TOKEN=<pass://path|strip_right>\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 	output := filepath.Join(dir, ".env")
@@ -115,9 +115,9 @@ func TestSyncDryRunRedaction(t *testing.T) {
 	dir := t.TempDir()
 	input := filepath.Join(dir, ".envseed")
 	template := strings.Join([]string{
-		`SHORT=<pass:short|strip_right>`,
-		`MEDIUM=<pass:medium|strip_right>`,
-		`LONG=<pass:long|strip_right>`,
+		`SHORT=<pass://short|strip_right>`,
+		`MEDIUM=<pass://medium|strip_right>`,
+		`LONG=<pass://long|strip_right>`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(input, []byte(template), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
@@ -168,16 +168,16 @@ func TestSyncDryRunRedactsAcrossContexts(t *testing.T) {
 	t.Parallel()
 
 	template := strings.Join([]string{
-		"BARE1=<pass:shared|strip_right>",
-		"BARE2=<pass:shared|strip_right>",
-		"DOUBLE1=\"<pass:shared|strip_right>\"",
-		"DOUBLE2=\"<pass:shared|strip_right>\"",
-		"CMD1=$(printf %s <pass:shared|strip_right>)",
-		"CMD2=$(printf %s <pass:shared|strip_right>)",
-		"BACKTICK1=`echo <pass:shared|strip_right>`",
-		"BACKTICK2=`echo <pass:shared|strip_right>`",
-		"SINGLE1='<pass:shared|strip_right>'",
-		"SINGLE2='<pass:shared|strip_right>'",
+		"BARE1=<pass://shared|strip_right>",
+		"BARE2=<pass://shared|strip_right>",
+		"DOUBLE1=\"<pass://shared|strip_right>\"",
+		"DOUBLE2=\"<pass://shared|strip_right>\"",
+		"CMD1=$(printf %s <pass://shared|strip_right>)",
+		"CMD2=$(printf %s <pass://shared|strip_right>)",
+		"BACKTICK1=`echo <pass://shared|strip_right>`",
+		"BACKTICK2=`echo <pass://shared|strip_right>`",
+		"SINGLE1='<pass://shared|strip_right>'",
+		"SINGLE2='<pass://shared|strip_right>'",
 	}, "\n") + "\n"
 
 	dir := t.TempDir()
@@ -249,7 +249,7 @@ func TestSyncWritesToOutputDirectory(t *testing.T) {
 	if err := os.Mkdir(outDir, 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	if err := os.WriteFile(input, []byte("KEY=<pass:key|strip_right>\n"), 0o600); err != nil {
+	if err := os.WriteFile(input, []byte("KEY=<pass://key|strip_right>\n"), 0o600); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
 

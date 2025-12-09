@@ -9,14 +9,13 @@ import (
 	"testing"
 
 	"envseed/internal/sandbox"
+	"envseed/internal/testsupport"
 )
 
 // [EVT-BEU-2] Bare/negative probes for Always‑escape set (source)
 func TestBareNegativeUnescaped_SourceBehavior(t *testing.T) {
 	t.Parallel()
-	if ok, err := sandbox.Available(); !ok || err != nil {
-		t.Skipf("sandbox unavailable: %v", err)
-	}
+	testsupport.RequireSandbox(t)
 
 	// Probe a small representative subset without escaping in .env.
 	// Expect sourcing to fail or to produce incorrect values (both acceptable as proof).

@@ -114,7 +114,7 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 #### C.4.P Placeholders and Modifiers
 ##### Unit
 - [EVT-MPU-1] Placeholder syntax and whitespace (Section 4.3): PATH trimming; tolerances around `|`, `,`, and immediately before `>`; unknown/duplicate/empty modifiers; newline/NUL in body.
-- [EVT-MPU-2] Sigil strictness (Section 4.3): no whitespace between pass and : (e.g., `<pass :` is a parse error) and diagnostics MUST include line and column.
+- [EVT-MPU-2] URL scheme strictness (Section 4.3): treat "<pass://" as the only valid placeholder URL. Sequences that begin with "<pass" but are not followed by "://", or that insert whitespace between "pass" and "://", MUST be rejected as parse errors with line and column diagnostics. Suites MUST include at least: "<pass://path>" (success), "<pass ://path>" (URL scheme violation), "<pass:path>" (legacy syntax rejected), and "<pass>" (incomplete URL).
 - [EVT-MPU-3] Case sensitivity (Section 4.3): modifiers are case-sensitive; Allow_Tab is unknown.
 - [EVT-MPU-4] Modifier semantics (Section 5.2): strip-family -> base64 -> context checks; invalid combinations (unique subcodes); dangerously_bypass_escape behavior.
 - [EVT-MPU-5] Base64 fundamentals (Section 5.2): [A-Za-z0-9+/=], no wrapping; empty and varied lengths including non-ASCII sources.
@@ -127,10 +127,11 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 - [EVT-MPP-3] Base64 in bare context (Sections 5.2, 5.3.3): `+`, `/`, `=` MUST NOT be escaped; rendered output MUST remain reparsable.
 ##### Fuzz
 - [EVT-MPF-1] Placeholder body fuzz (Section 4.3): PATH/modifier spacing, unknown/duplicate/empty modifiers, newline/NUL in body.
-- [EVT-MPF-2] Near-sigil fuzz (Section 4.3): generate `<pass` followed by one of { `:`, SPACE, TAB, CR, LF, ALNUM, PUNCT } to assert that any whitespace prior to `:` yields a parse error with source position.
+- [EVT-MPF-2] Near-URL-scheme fuzz (Section 4.3): generate "<pass" followed by one of { ":", "/", SPACE, TAB, CR, LF, ALNUM, PUNCT } and assert that only "<pass://" leads into a valid placeholder, while all other "<pass..." sequences (including legacy "<pass:PATH>") produce a URL scheme violation with a specific DetailCode and accurate source position.
 - [EVT-MPF-3] Invalid modifier combinations (Section 5.2): render-time errors with unique subcodes.
 - [EVT-MPF-4] Base64 variety (Section 5.2): alphabet coverage; no line wrapping.
 - [EVT-MPF-5] Non-ASCII whitespace around PATH/modifiers (Sections 4.3, 4.5): trimming and list whitespace MUST reject non-ASCII whitespace with the appropriate DetailCode (`EVE-103-204`, `EVE-103-305`).
+- [EVT-MPF-6] PATH IRI fuzz (Sections 4.3, Appendix D.5): fuzz PATH as an IRI authority + path component, combining valid code points, percent-encoded reserved characters, and explicitly invalid inputs that introduce "?", "#", "|", or ">" unencoded. Suites MUST assert that valid PATHs parse successfully, while invalid ones produce placeholder syntax errors with the expected DetailCode and accurate source positions.
 
 #### C.4.E Context and Escaping
 ##### Unit
@@ -243,14 +244,14 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 #### C.4.N Nesting and Boundaries
 ##### Unit
 - [EVT-MNU-1] $(...) closer boundary (Section 5.3.7): placeholder-originated ) escaped as \); syntactic closers unescaped; re-parse succeeds.
-- [EVT-MNU-2] Bare adjacency with surrounding literals (Sections 4.1, 5.1, 5.3.3-5.3.4): when a bare placeholder is immediately adjacent to literal text on either side (prefix and/or suffix), and the resolved value contains any character outside the bare-safe set `[A-Za-z0-9_.-]` (subject to TAB/newline/control prohibitions and base64 allowances), the renderer MUST preserve lexical boundaries by emitting a backslash before each such character per Section 5.3.3 (Bare). Rendering MUST succeed and the result MUST re-parse identically. Example: Input `EXAMPLE_VAR=prefix<pass:a>suffix`, `<pass:a>` -> ` value` (leading space), expectation: `EXAMPLE_VAR=prefix\ valuesuffix`.
-- [EVT-MNU-3] Bare adjacency (positive complement) (Sections 4.1, 5.1, 5.3.3-5.3.4): when the resolved value consists solely of the bare-safe set (or permitted base64 characters when `|base64>` is present: `[A-Za-z0-9+/=]`), adjacency to surrounding literals MUST render successfully and re-parse identically. Example (positive): Input `EXAMPLE_VAR=prefix<pass:a>suffix`, `<pass:a>` -> `safe123`, expectation: `EXAMPLE_VAR=prefixsafe123suffix`.
+- [EVT-MNU-2] Bare adjacency with surrounding literals (Sections 4.1, 5.1, 5.3.3-5.3.4): when a bare placeholder is immediately adjacent to literal text on either side (prefix and/or suffix), and the resolved value contains any character outside the bare-safe set `[A-Za-z0-9_.-]` (subject to TAB/newline/control prohibitions and base64 allowances), the renderer MUST preserve lexical boundaries by emitting a backslash before each such character per Section 5.3.3 (Bare). Rendering MUST succeed and the result MUST re-parse identically. Example: Input `EXAMPLE_VAR=prefix<pass://a>suffix`, `<pass://a>` -> ` value` (leading space), expectation: `EXAMPLE_VAR=prefix\ valuesuffix`.
+- [EVT-MNU-3] Bare adjacency (positive complement) (Sections 4.1, 5.1, 5.3.3-5.3.4): when the resolved value consists solely of the bare-safe set (or permitted base64 characters when `|base64>` is present: `[A-Za-z0-9+/=]`), adjacency to surrounding literals MUST render successfully and re-parse identically. Example (positive): Input `EXAMPLE_VAR=prefix<pass://a>suffix`, `<pass://a>` -> `safe123`, expectation: `EXAMPLE_VAR=prefixsafe123suffix`.
 - [EVT-MNU-4] Bare adjacency with extended escapes (Sections 5.3.3-5.3.4): when adjacency exists and the resolved value contains any of `|`, `&`, `;`, `<`, `>`, renderer MUST backslash-escape each such character; result MUST re-parse identically; with `allow_tab`, TAB MUST be emitted as-is.
   [Refs: Sections 5.3.3, 5.3.4]
 ##### Property
 - [EVT-MNP-1] $(...) nesting (Section 5.3.7): depths 1-3; placeholder-originated ) escaped; syntactic closers unescaped.
 - [EVT-MNP-2] Bare boundaries (Sections 4.1, 5.3.3-5.3.4): line start/end, pre-comment, adjacency to placeholders.
-- [EVT-MNP-3] Consecutive placeholders and adjacency (Sections 4.3, 5.1): <pass:a><pass:b> reparsable with unchanged quoting; see C.4.R for byte-identity guarantees.
+- [EVT-MNP-3] Consecutive placeholders and adjacency (Sections 4.3, 5.1): "<pass://a><pass://b>" reparsable with unchanged quoting; see C.4.R for byte-identity guarantees.
   - See C.5.C for sandboxed execution semantics involving command substitution and multi-level evaluation.
 ##### Fuzz
 - [EVT-MNF-1] Deep $(...) nesting with multiple closing parentheses (Section 5.3.7): depths 1-3; only placeholder-originated ) escaped; re-parse succeeds.
@@ -268,7 +269,7 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
 - [EVT-MZU-2] Resolver failures: expectations follow Appendix B / `docs/errors.md` (exit code 104; display labels per Section 7.11).
 - [EVT-MZU-3] Multi-appearance reuse: repeated PATHs across lines/adjacent placeholders MUST hit the in-process cache (no duplicate resolutions).
 - [EVT-MZU-4] Call-count constraint: For a template containing the same PATH multiple times (across lines and adjacency), the underlying resolver/Pass client MUST be invoked at most once per unique PATH per render pass. Suites MUST use an instrumented PassClient that counts Show calls to assert this.
-- [EVT-MZU-5] Adjacency and cross-line cases: Suites MUST include both `<pass:dup><pass:dup>` adjacency and duplicates across separate lines to verify cache hits in distinct parse positions.
+  - [EVT-MZU-5] Adjacency and cross-line cases: Suites MUST include both "<pass://dup><pass://dup>" adjacency and duplicates across separate lines to verify cache hits in distinct parse positions.
   - [EVT-MZU-6] Resolver raw vs renderer normalization (Sections 5.1, 6.2): The resolver MUST return the raw value unchanged, and the renderer MUST perform the default EOF newline normalization. Suites MUST:
     - Use an instrumented PassClient double to return "abc\n" (and "abc\r\n") and assert that the renderer outputs "abc".
     - Assert single-resolution policy (Show called at most once per PATH per render pass) and separation of concerns: the resolver output includes trailing newline(s); the renderer output reflects exactly-one trailing newline removal.
@@ -288,7 +289,7 @@ Headings follow `C.<scope>.<family>`. Within each family, items are grouped by m
   - Always‑escape candidates: SPACE, #, $, ", ', `, \\, (, ), {, }, [, ]
   - Additional shell meta probes (for investigation): |, &, ;, <, >
   Procedure:
-  1) Render assignments `VAR=<pass:...>` for each candidate (resolver double returns the candidate).
+  1) Render assignments `VAR=<pass://...>` for each candidate (resolver double returns the candidate).
   2) In sandboxed bash: `set -a; . <env>; declare -p VAR` and decode the value.
   3) Assert: sourcing succeeds and decoded values equal the renderer’s intended values.
   Environment: print `bash --version` (first line) and `shopt -p` for diagnostics; skip with a clear reason when sandbox/bash are unavailable.

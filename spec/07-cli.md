@@ -155,7 +155,7 @@ Error categories (101+):
 101 Invalid arguments or unknown/missing command
 102 Template read failure (I/O)
 103 Template parsing failure (.envseed -> AST)
-104 Resolver failures (missing `pass` binary; `pass show` I/O failure; entry not found; value contains NUL)
+104 Resolver failures (missing `pass` binary; `pass` I/O failure; entry not found; value contains NUL)
 105 Rendering failures (context/modifier issues) and post-render re-parse failure
 106 Output failures (sync write I/O: path preconditions, tmp write, rename, chmod, dry-run write)
 107 Target parsing failure (.env for A/B)
@@ -192,16 +192,16 @@ This section defines the band allocation for subcodes within each exit category.
   - EVE-102-B2 (201..299) — File opening or reading failures (FD exhaustion, transient I/O, generic read)
 
 - 103 Parsing (Parser -> AST)
-  - EVE-103-B0 (1..99) — Lexical & sigil constraints (non-ASCII whitespace around placeholder separators `|`, `,`, before `>`, trimming around PATH; whitespace between `pass` and `:`; non-ASCII leading whitespace at line start)
+  - EVE-103-B0 (1..99) — Lexical & scheme constraints for placeholder separators, PATH trimming, URL scheme strictness (<pass:// only), and non-ASCII leading whitespace.
   - EVE-103-B1 (101..199) — Assignment structure (name/operator/= / non-assignment input)
-  - EVE-103-B2 (201..299) — Placeholder body/sigil (empty PATH/newline/NUL)
+  - EVE-103-B2 (201..299) — Placeholder body/URL (empty PATH/newline/NUL)
   - EVE-103-B3 (301..399) — Modifiers (missing/unknown/empty/duplicate/non-ASCII whitespace/NUL)
   - EVE-103-B4 (401..499) — Unterminated quotes/substitutions (double/single/backtick/`$(...)`)
   - EVE-103-B5 (501..599) — Indexing (mismatched brackets, etc.)
 
 - 104 Resolver (pass)
   - EVE-104-B0 (1..99) — `pass` not installed
-  - EVE-104-B1 (101..199) — `pass show` failure (non-missing entry)
+  - EVE-104-B1 (101..199) — `pass` failure (non-missing entry)
   - EVE-104-B2 (201..299) — Missing `pass` entry
   - EVE-104-B3 (301..399) — Value contains unsupported characters (e.g., NUL)
 
@@ -262,4 +262,4 @@ These examples illustrate band selection and concrete-code assignment. Specific 
 - Examples (Informative):
   - `envseed ERROR [EVE-105-<subcode>]: <message>: line N[, column M]: placeholder <PATH>`
   - `envseed ERROR [EVE-105-<subcode>]: <message>\nAt: line N[, column M], placeholder <PATH>`
-  - When including placeholder strings in diagnostics (e.g., `<pass:...>`), the placeholder string MUST be masked and MUST NOT be emitted verbatim.
+- When including placeholder strings in diagnostics (e.g., "<pass://...>"), the placeholder string MUST be masked and MUST NOT be emitted verbatim.

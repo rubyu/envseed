@@ -53,17 +53,17 @@ func (p *RendererRoundTripProfile) buildLine(r *rand.Rand) rtLine {
 	var mods []string
 	switch ctx {
 	case "bare":
-		rhs = fmt.Sprintf("<pass:%s>", path)
+		rhs = fmt.Sprintf("<pass://%s>", path)
 	case "double":
-		rhs = fmt.Sprintf("\"<pass:%s>\"", path)
+		rhs = fmt.Sprintf("\"<pass://%s>\"", path)
 	case "cmd":
-		rhs = fmt.Sprintf("$(echo <pass:%s>)", path)
+		rhs = fmt.Sprintf("$(echo <pass://%s>)", path)
 	case "backtick":
-		rhs = fmt.Sprintf("`echo <pass:%s>`", path)
+		rhs = fmt.Sprintf("`echo <pass://%s>`", path)
 	case "single":
 		// keep single quoted simple and rely on renderer rules to leave it literal
 		mods = []string{"allow_tab"}
-		rhs = fmt.Sprintf("'<pass:%s|allow_tab>'", path)
+		rhs = fmt.Sprintf("'<pass://%s|allow_tab>'", path)
 	}
 	return rtLine{
 		text:     strings.Join([]string{name, op, rhs}, ""),

@@ -82,7 +82,7 @@ Backtick       `, \, $
 - Note 2: In $(...), only placeholder-originated ) MUST be escaped; the syntactic closing parenthesis MUST NOT be escaped.
 - Note 3: In Bare, a leading `~` at the beginning of the RHS MUST be escaped (to prevent tilde expansion) or placed into a quoted context. This is a conditional (position‑dependent) rule, not part of the unconditional matrix.
 
-#### 5.3.4 Bare Context (`VAR=<pass:...>`)
+#### 5.3.4 Bare Context (`VAR=<pass://...>`)
 - The following characters MUST NOT be emitted: NUL; control characters other than TAB/newline; newline (unrepresentable in bare even when `allow_newline` is present).
 - TAB MUST NOT be emitted unless the `allow_tab` modifier is present. When `allow_tab` is present, TAB in the secret value MUST be emitted as‑is (no preceding backslash added by the renderer).
 - All other Unicode code points MUST be accepted. Characters requiring protection to preserve literal meaning in a bare assignment MUST be backslash-escaped as specified in Section 5.3.3 (Bare). Top-level `#` MUST be treated per Section 4.1 (an odd number of preceding backslashes yields a literal `#`; otherwise it begins a trailing comment).
@@ -159,7 +159,7 @@ Implementations MUST surface the following context-specific failures under exit 
   - contains control character
     - Guidance: Quote or encode the value.
   - contains non-bare characters (backslash-escape to preserve lexical boundaries)
-    - Guidance: The renderer MUST preserve lexical boundaries by inserting backslashes before characters that would change bare interpretation (per Section 5.3.3). Quoting by the template author is optional for readability; the renderer does not change the chosen quoting context, and auto-escaping suffices. When appropriate (e.g., the secret contains many control characters or mixed newlines that the chosen context cannot represent cleanly), consider using `<pass:PATH|base64>` and place the placeholder in a context that can represent it.
+    - Guidance: The renderer MUST preserve lexical boundaries by inserting backslashes before characters that would change bare interpretation (per Section 5.3.3). Quoting by the template author is optional for readability; the renderer does not change the chosen quoting context, and auto-escaping suffices. When appropriate (e.g., the secret contains many control characters or mixed newlines that the chosen context cannot represent cleanly), consider using "<pass://PATH|base64>" and place the placeholder in a context that can represent it.
 
 - Modifiers (common)
   - invalid modifier combination

@@ -10,14 +10,14 @@ This chapter defines the security invariants EnvSeed MUST satisfy. RFC 2119 term
 - When content changes, output files MUST be written atomically. File permissions MUST be `0600`.
 
 ### 6.2 Resolver & Secret Lifecycle
-- Secret retrieval is limited to in-process resolution. Calls to `pass show <PATH>` MUST be limited to one per PATH during execution using an in-process cache.
+- Secret retrieval is limited to in-process resolution. Calls to `pass <PATH>` MUST be limited to one per PATH during execution using an in-process cache.
 - The resolver MUST NOT modify the output of `pass`. EOF newline normalization is defined in Section 5.1; any additional adjustments to trailing whitespace or newlines are controlled by modifiers (`strip`/`strip_right`/`strip_left`).
 - Values that contain NUL bytes are invalid. See Appendix D.1 for template-time prohibition and Section 7.10 for resolver-time exit categorization.
 - The resolver MUST NOT be used after it is closed. Violations are internal errors and are assigned unique subcodes.
 - The cache is limited to the lifetime of the process and is cleared on process termination (see Section 6.1).
 
 Resolver interaction (Normative)
-- EnvSeed launches `pass show <PATH>` and connects the child’s stdin so that interactive pinentry can prompt the user.
+- EnvSeed launches `pass <PATH>` and connects the child’s stdin so that interactive pinentry can prompt the user.
 - EnvSeed MUST NOT set or override `GPG_TTY`.
 - EnvSeed MUST NOT change pinentry/gpg-agent environment or configuration, and MUST NOT force non-interactive loopback or read passphrases from stdin.
 - Operators are responsible for configuring TTY pinentry when needed (e.g., `export GPG_TTY=$(tty)`).
