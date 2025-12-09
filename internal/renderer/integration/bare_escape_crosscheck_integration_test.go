@@ -10,6 +10,7 @@ import (
 
 	"envseed/internal/renderer"
 	"envseed/internal/sandbox"
+	"envseed/internal/testsupport"
 )
 
 // [EVT-BEP-1] Cross‑check: renderer vs measured minimal escape set (source)
@@ -18,9 +19,7 @@ import (
 // Bare output MUST escape that character.
 func TestBareEscape_CrossCheck_NoUnderEscape(t *testing.T) {
 	t.Parallel()
-	if ok, err := sandbox.Available(); !ok || err != nil {
-		t.Skipf("sandbox unavailable: %v", err)
-	}
+	testsupport.RequireSandbox(t)
 
 	// Probe set: Always-escape + investigative metas
 	candidates := []rune{' ', '#', '$', '"', '\'', '`', '\\', '(', ')', '{', '}', '[', ']', '|', '&', ';', '<', '>'}

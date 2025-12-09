@@ -10,6 +10,7 @@ import (
 
 	"envseed/internal/renderer"
 	"envseed/internal/sandbox"
+	sboxtest "envseed/internal/testsupport"
 )
 
 // fakeResolver is provided in another test file within this package.
@@ -17,9 +18,7 @@ import (
 // [EVT-BEU-1] Bare/minimal escape set via sandboxed bash (source)
 func TestBareMinimalEscape_Source_Succeeds(t *testing.T) {
 	t.Parallel()
-	if ok, err := sandbox.Available(); !ok || err != nil {
-		t.Skipf("sandbox unavailable: %v", err)
-	}
+	sboxtest.RequireSandbox(t)
 
 	// Always-escape candidates + a few investigative metas.
 	candidates := []rune{' ', '#', '$', '"', '\'', '`', '\\', '(', ')', '{', '}', '[', ']', '|', '&', ';', '<', '>'}
