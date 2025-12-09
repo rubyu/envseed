@@ -18,7 +18,7 @@ Templates live in Git; secrets stay in `pass`.
 ```sh
 # make a quick template file
 cat > .envseed <<'EOF'
-PASSWORD='<pass:www.example.com/password>'
+PASSWORD='<pass://www.example.com/password>'
 EOF
 ```
 
@@ -54,7 +54,7 @@ PASSWORD='vP9%cQ$m*Nqk'
 
 ## How It Works
 1. Parse `.envseed` with a compact Bash‑subset parser (syntax validated).
-2. For each `<pass:…>` placeholder, run `pass show <PATH>`.
+2. For each `<pass://…>` placeholder, run `pass show <PATH>`.
 3. Apply context‑aware escaping (quotes/newlines/tabs).
 4. Atomically write target `.env*` with `0600` permissions.
 5. Optionally show a masked unified diff before applying.

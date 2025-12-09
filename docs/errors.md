@@ -132,14 +132,14 @@
 
 - Exit code: `103`
 - CLI message: ``non-ASCII whitespace around placeholder separators or before `>```
-- Guidance: Non‑ASCII whitespace was detected around `|`, `,`, or before `>`. Use ASCII SPACE or TAB only. For example: NG: `<pass:api_key | base64>`. OK: `<pass:api_key|base64>`.
+- Guidance: Non‑ASCII whitespace was detected around `|`, `,`, or before `>`. Use ASCII SPACE or TAB only. For example: NG: "<pass://api_key | base64>". OK: "<pass://api_key|base64>".
 
 <a id="eve-103-2"></a>
 ## EVE-103-2
 
 - Exit code: `103`
 - CLI message: `non-ASCII whitespace adjacent to placeholder PATH`
-- Guidance: Non‑ASCII whitespace was detected adjacent to the placeholder path. Use ASCII SPACE or TAB only when trimming around the placeholder path. For example: NG uses U+00A0 between `:` and `api_key`: `<pass:api_key|...>`. OK: `<pass:api_key|...>`.
+- Guidance: Non‑ASCII whitespace was detected adjacent to the placeholder PATH. Use ASCII SPACE or TAB only when trimming around the placeholder PATH. For example: NG uses U+00A0 immediately after "pass://" in "<pass:// api_key|...>". OK: "<pass://api_key|...>".
 
 <a id="eve-103-3"></a>
 ## EVE-103-3
@@ -152,8 +152,8 @@
 ## EVE-103-4
 
 - Exit code: `103`
-- CLI message: ``whitespace between `pass` and `:```
-- Guidance: Whitespace was inserted between `pass` and `:`. Do not add whitespace there. For example: NG: `<pass :path|...>`. OK: `<pass:path|...>`.
+- CLI message: `invalid placeholder sigil near '<pass'`
+- Guidance: Sigil violation: placeholders MUST start with the literal sequence "<pass://" with no whitespace. Do not insert whitespace between "pass" and "://", and do not use the legacy "<pass:PATH>" syntax. For example: NG: "<pass ://path>", "<pass:path|...>". OK: "<pass://path|...>".
 
 <a id="eve-103-101"></a>
 ## EVE-103-101
@@ -181,14 +181,14 @@
 
 - Exit code: `103`
 - CLI message: `empty placeholder path`
-- Guidance: The placeholder path is empty. Provide a non‑empty path inside `<pass:...>`. For example: NG: `<pass:|...>`. OK: `<pass:secret/path|...>`.
+- Guidance: The placeholder PATH is empty. Provide a non‑empty PATH in "<pass://PATH>". For example: NG: "<pass://>". OK: "<pass://secret/path>".
 
 <a id="eve-103-202"></a>
 ## EVE-103-202
 
 - Exit code: `103`
 - CLI message: `unterminated placeholder`
-- Guidance: The placeholder is unterminated. Close placeholders with `>` and ensure all modifiers are complete. For example: NG: `<pass:api_key|allow_newline`. OK: `<pass:api_key|allow_newline>`.
+- Guidance: The placeholder is unterminated. Close placeholders with `>` and ensure all modifiers are complete. For example: NG: "<pass://api_key|allow_newline". OK: "<pass://api_key|allow_newline>".
 
 <a id="eve-103-203"></a>
 ## EVE-103-203
@@ -211,12 +211,19 @@
 - CLI message: `template contains NUL byte`
 - Guidance: The template contains a NUL byte (U+0000). Remove NUL bytes from the input.
 
+<a id="eve-103-206"></a>
+## EVE-103-206
+
+- Exit code: `103`
+- CLI message: `placeholder PATH is not a valid IRI path`
+- Guidance: The placeholder PATH is not a valid IRI authority + path for the "pass" scheme. Ensure that "pass://PATH" forms a syntactically valid IRI without query or fragment components, and percent-encode reserved characters such as "?", "#", "|", and ">" when they need to be embedded in PATH.
+
 <a id="eve-103-301"></a>
 ## EVE-103-301
 
 - Exit code: `103`
 - CLI message: `missing placeholder modifiers after '|'`
-- Guidance: The `|` separator was present but no modifiers were provided after it. List at least one modifier after `|`. For example: `<pass:api_key|allow_newline>`.
+- Guidance: The `|` separator was present but no modifiers were provided after it. List at least one modifier after `|`. For example: "<pass://api_key|allow_newline>".
 
 <a id="eve-103-302"></a>
 ## EVE-103-302
@@ -230,14 +237,14 @@
 
 - Exit code: `103`
 - CLI message: `duplicate placeholder modifier %q`
-- Guidance: A placeholder modifier was repeated. Specify each modifier at most once. For example: NG: `<pass:api_key|strip,strip>`. OK: `<pass:api_key|strip>`.
+- Guidance: A placeholder modifier was repeated. Specify each modifier at most once. For example: NG: "<pass://api_key|strip,strip>". OK: "<pass://api_key|strip>".
 
 <a id="eve-103-304"></a>
 ## EVE-103-304
 
 - Exit code: `103`
 - CLI message: `empty placeholder modifier`
-- Guidance: An empty placeholder modifier was found. Remove empty entries between commas. For example: NG: `<pass:api_key|strip,,base64>`.
+- Guidance: An empty placeholder modifier was found. Remove empty entries between commas. For example: NG: "<pass://api_key|strip,,base64>".
 
 <a id="eve-103-305"></a>
 ## EVE-103-305
@@ -629,7 +636,7 @@
 
 - Exit code: `107`
 - CLI message: `placeholders are not allowed in target .env`
-- Guidance: Placeholders are not allowed in the target `.env`. Remove constructs such as `<pass:...>`.
+- Guidance: Placeholders are not allowed in the target `.env`. Remove constructs such as "<pass://...>" or legacy "<pass:...>" placeholders.
 
 <a id="eve-108-1"></a>
 ## EVE-108-1

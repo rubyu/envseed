@@ -14,10 +14,10 @@ import (
 // [EVT-MZU-1][EVT-MZU-3][EVT-MZU-4][EVT-MZU-5]
 func TestPassResolverCachesDuplicatePaths(t *testing.T) {
 	template := strings.Join([]string{
-		"ONE=<pass:shared|strip_right>",
-		"TWO=<pass:shared|strip_right>",
-		"THREE=<pass:shared|strip_right><pass:shared|strip_right>",
-		"FOUR=<pass:unique|strip_right>",
+		"ONE=<pass://shared|strip_right>",
+		"TWO=<pass://shared|strip_right>",
+		"THREE=<pass://shared|strip_right><pass://shared|strip_right>",
+		"FOUR=<pass://unique|strip_right>",
 	}, "\n") + "\n"
 	pass := &fakePass{values: map[string]string{
 		"shared": "shared-value",
@@ -43,7 +43,7 @@ func TestPassResolverCachesDuplicatePaths(t *testing.T) {
 // [EVT-BZU-1][EVT-BZP-1]
 func TestPassResolverCacheScopedPerInstance(t *testing.T) {
 	pass := &fakePass{values: map[string]string{"shared": "value"}}
-	template := "VAR=<pass:shared|strip_right>\n"
+	template := "VAR=<pass://shared|strip_right>\n"
 	elems, err := parser.Parse(template)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -63,7 +63,7 @@ func TestPassResolverCacheScopedPerInstance(t *testing.T) {
 
 // [EVT-MZU-2][EVT-MUU-1]
 func TestPassResolverRejectsNULSecrets(t *testing.T) {
-	template := "VAR=<pass:bad>\n"
+	template := "VAR=<pass://bad>\n"
 	elems, err := parser.Parse(template)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -88,7 +88,7 @@ func TestPassResolverRejectsNULSecrets(t *testing.T) {
 // [EVT-MWP-4]
 func TestWrapRenderErrorSingleQuotedNewline(t *testing.T) {
 	expectRenderError(t,
-		"VAR='<pass:secret>'\n",
+		"VAR='<pass://secret>'\n",
 		map[string]string{"secret": "line1\nline2\n"},
 		"EVE-105-102",
 		"newline not permitted in single-quoted placeholder",
@@ -99,7 +99,7 @@ func TestWrapRenderErrorSingleQuotedNewline(t *testing.T) {
 // [EVT-MGU-6][EVT-BDU-1]
 func TestWrapRenderErrorReportsColumn(t *testing.T) {
 	err := func() error {
-		elems, parseErr := parser.Parse("VAR=<pass:secret>\n")
+		elems, parseErr := parser.Parse("VAR=<pass://secret>\n")
 		if parseErr != nil {
 			return parseErr
 		}
@@ -124,7 +124,7 @@ func TestWrapRenderErrorReportsColumn(t *testing.T) {
 
 // [EVT-MPU-4]
 func TestWrapRenderErrorInvalidModifierCombination(t *testing.T) {
-	elems, err := parser.Parse("VAL=<pass:secret|base64,strip>\n")
+	elems, err := parser.Parse("VAL=<pass://secret|base64,strip>\n")
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
@@ -162,7 +162,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 	}{
 		{
 			name:       "SingleQuotedContainsQuote",
-			template:   "VAR='<pass:secret>'\n",
+			template:   "VAR='<pass://secret>'\n",
 			values:     map[string]string{"secret": "bad'value\n"},
 			wantCode:   "EVE-105-101",
 			wantMsg:    "single-quoted placeholder cannot contain a single quote (`'`)",
@@ -170,7 +170,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "SingleQuotedTabMissingAllow",
-			template:   "VAR='<pass:secret>'\n",
+			template:   "VAR='<pass://secret>'\n",
 			values:     map[string]string{"secret": "tab\tvalue\n"},
 			wantCode:   "EVE-105-103",
 			wantMsg:    "TAB not permitted in single-quoted placeholder",
@@ -178,7 +178,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "CommandSubstControl",
-			template:   "VAR=$(printf %s <pass:secret>)\n",
+			template:   "VAR=$(printf %s <pass://secret>)\n",
 			values:     map[string]string{"secret": "control\x02\n"},
 			wantCode:   "EVE-105-303",
 			wantMsg:    "control character U+0002 not permitted in command substitution placeholder",
@@ -186,7 +186,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BacktickNewlineUnsupported",
-			template:   "VAR=`echo <pass:secret>`\n",
+			template:   "VAR=`echo <pass://secret>`\n",
 			values:     map[string]string{"secret": "line1\nline2\n"},
 			wantCode:   "EVE-105-401",
 			wantMsg:    "newline not permitted in backtick placeholder",
@@ -194,7 +194,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BacktickTabMissingModifier",
-			template:   "VAR=`echo <pass:secret>`\n",
+			template:   "VAR=`echo <pass://secret>`\n",
 			values:     map[string]string{"secret": "tab\tvalue\n"},
 			wantCode:   "EVE-105-402",
 			wantMsg:    "TAB not permitted in backtick placeholder",
@@ -202,7 +202,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BacktickControl",
-			template:   "VAR=`echo <pass:secret>`\n",
+			template:   "VAR=`echo <pass://secret>`\n",
 			values:     map[string]string{"secret": "control\x03\n"},
 			wantCode:   "EVE-105-403",
 			wantMsg:    "control character U+0003 not permitted in backtick placeholder",
@@ -210,7 +210,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BacktickAllowNewlineUnsupportedModifier",
-			template:   "VAR=`echo <pass:secret|allow_newline>`\n",
+			template:   "VAR=`echo <pass://secret|allow_newline>`\n",
 			values:     map[string]string{"secret": "value\n"},
 			wantCode:   "EVE-105-404",
 			wantMsg:    "allow_newline modifier is not supported in backtick context",
@@ -218,7 +218,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BareNewlineUnsupported",
-			template:   "VAR=<pass:secret>\n",
+			template:   "VAR=<pass://secret>\n",
 			values:     map[string]string{"secret": "line1\nline2\n"},
 			wantCode:   "EVE-105-501",
 			wantMsg:    "newline not permitted in bare placeholder",
@@ -226,7 +226,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BareTabMissingModifier",
-			template:   "VAR=<pass:secret>\n",
+			template:   "VAR=<pass://secret>\n",
 			values:     map[string]string{"secret": "tab\tvalue\n"},
 			wantCode:   "EVE-105-502",
 			wantMsg:    "TAB not permitted in bare placeholder",
@@ -234,7 +234,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BareControl",
-			template:   "VAR=<pass:secret>\n",
+			template:   "VAR=<pass://secret>\n",
 			values:     map[string]string{"secret": "control\x01\n"},
 			wantCode:   "EVE-105-503",
 			wantMsg:    "control character U+0001 not permitted in bare placeholder",
@@ -242,7 +242,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 		},
 		{
 			name:       "BareAllowNewlineUnsupportedModifier",
-			template:   "VAR=<pass:secret|allow_newline>\n",
+			template:   "VAR=<pass://secret|allow_newline>\n",
 			values:     map[string]string{"secret": "value\n"},
 			wantCode:   "EVE-105-504",
 			wantMsg:    "allow_newline modifier is not supported in bare context",
@@ -264,7 +264,7 @@ func TestWrapRenderErrorContextDetailCodes(t *testing.T) {
 func TestRenderSingleQuotedTrimsTrailingNewlines(t *testing.T) {
 	t.Parallel()
 
-	template := "VAR='<pass:secret|strip_right>'\n"
+	template := "VAR='<pass://secret|strip_right>'\n"
 	cases := []struct {
 		name string
 		raw  string
@@ -291,7 +291,7 @@ func TestRenderSingleQuotedTrimsTrailingNewlines(t *testing.T) {
 func TestRenderSingleQuotedAllowTabSuccess(t *testing.T) {
 	t.Parallel()
 
-	template := "VAR='<pass:secret|allow_tab>'\n"
+	template := "VAR='<pass://secret|allow_tab>'\n"
 	rendered := renderMustSucceed(t, template, map[string]string{"secret": "a\tb"})
 	const want = "VAR='a\tb'\n"
 	if rendered != want {
@@ -303,7 +303,7 @@ func TestRenderSingleQuotedAllowTabSuccess(t *testing.T) {
 func TestRenderSingleQuotedDangerouslyBypassEscape(t *testing.T) {
 	t.Parallel()
 
-	template := "VAR='<pass:secret|dangerously_bypass_escape>'\n"
+	template := "VAR='<pass://secret|dangerously_bypass_escape>'\n"
 	secret := "bad'value\nline\n"
 	rendered := renderMustSucceed(t, template, map[string]string{"secret": secret})
 	if !strings.Contains(rendered, "bad'value") || !strings.Contains(rendered, "line") {

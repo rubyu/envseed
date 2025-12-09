@@ -74,7 +74,7 @@ func TestBareEscape_CrossCheck_NoUnderEscape(t *testing.T) {
 		values[path] = string(r)
 		paths = append(paths, name)
 		tpl.WriteString(name)
-		tpl.WriteString("=<pass:")
+		tpl.WriteString("=<pass://")
 		tpl.WriteString(path)
 		tpl.WriteString(">\n")
 	}

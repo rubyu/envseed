@@ -33,7 +33,7 @@ func TestBareMinimalEscape_Source_Succeeds(t *testing.T) {
 		path := name // use name as fake path key
 		fr.m[path] = string(r)
 		tpl.WriteString(name)
-		tpl.WriteString("=<pass:")
+		tpl.WriteString("=<pass://")
 		tpl.WriteString(path)
 		tpl.WriteString(">\n")
 		varNames = append(varNames, name)

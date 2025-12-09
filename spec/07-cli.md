@@ -192,7 +192,7 @@ This section defines the band allocation for subcodes within each exit category.
   - EVE-102-B2 (201..299) — File opening or reading failures (FD exhaustion, transient I/O, generic read)
 
 - 103 Parsing (Parser -> AST)
-  - EVE-103-B0 (1..99) — Lexical & sigil constraints (non-ASCII whitespace around placeholder separators `|`, `,`, before `>`, trimming around PATH; whitespace between `pass` and `:`; non-ASCII leading whitespace at line start)
+  - EVE-103-B0 (1..99) — Lexical & sigil constraints for placeholder separators, PATH trimming, sigil strictness (<pass:// only), and non-ASCII leading whitespace.
   - EVE-103-B1 (101..199) — Assignment structure (name/operator/= / non-assignment input)
   - EVE-103-B2 (201..299) — Placeholder body/sigil (empty PATH/newline/NUL)
   - EVE-103-B3 (301..399) — Modifiers (missing/unknown/empty/duplicate/non-ASCII whitespace/NUL)

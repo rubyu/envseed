@@ -11,7 +11,7 @@ import (
 
 // [EVT-MGU-1]
 func TestParse_AssignmentWithPlaceholders(t *testing.T) {
-	input := "  URL=http://<pass:host>/v1/<pass:key|dangerously_bypass_escape>\n"
+	input := "  URL=http://<pass://host>/v1/<pass://key|dangerously_bypass_escape>\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse returned error: %v", err)
@@ -59,7 +59,7 @@ func TestParse_AssignmentWithPlaceholders(t *testing.T) {
 
 // [EVT-MPU-1]
 func TestParse_ModifiersWithWhitespace(t *testing.T) {
-	input := "VAL=<pass:path | allow_tab , allow_newline>\n"
+	input := "VAL=<pass://path | allow_tab , allow_newline>\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -73,7 +73,7 @@ func TestParse_ModifiersWithWhitespace(t *testing.T) {
 
 // [EVT-MGU-1]
 func TestParse_DoubleQuotedPlaceholderContext(t *testing.T) {
-	input := "GREETING=\"Hello <pass:name>!\"\n"
+	input := "GREETING=\"Hello <pass://name>!\"\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -89,7 +89,7 @@ func TestParse_DoubleQuotedPlaceholderContext(t *testing.T) {
 
 // [EVT-MGU-1]
 func TestParse_CommandSubstitutionPlaceholderContext(t *testing.T) {
-	input := "CMD=$(echo <pass:secret>)\n"
+	input := "CMD=$(echo <pass://secret>)\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -105,7 +105,7 @@ func TestParse_CommandSubstitutionPlaceholderContext(t *testing.T) {
 
 // [EVT-MGU-1]
 func TestParse_BacktickPlaceholderContext(t *testing.T) {
-	input := "STAMP=`echo <pass:token>`\n"
+	input := "STAMP=`echo <pass://token>`\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -121,7 +121,7 @@ func TestParse_BacktickPlaceholderContext(t *testing.T) {
 
 // [EVT-MGU-1]
 func TestParse_SingleQuotedLiteralPlaceholder(t *testing.T) {
-	input := "RAW='<pass:secret>'\n"
+	input := "RAW='<pass://secret>'\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -220,12 +220,12 @@ func TestParse_AllowsModifierCombination(t *testing.T) {
 	}{
 		{
 			name:  "dangerously_with_allow_tab",
-			input: "VAL=<pass:path|dangerously_bypass_escape,allow_tab>\n",
+			input: "VAL=<pass://path|dangerously_bypass_escape,allow_tab>\n",
 			want:  []string{"dangerously_bypass_escape", "allow_tab"},
 		},
 		{
 			name:  "base64_with_allow_tab",
-			input: "VAL=<pass:path|base64,allow_tab>\n",
+			input: "VAL=<pass://path|base64,allow_tab>\n",
 			want:  []string{"base64", "allow_tab"},
 		},
 	}
@@ -249,9 +249,9 @@ func TestParse_DuplicateOrUnknownModifier(t *testing.T) {
 		input string
 		code  string
 	}{
-		{input: "KEY=<pass:path|allow_tab,allow_tab>\n", code: "EVE-103-303"},
-		{input: "KEY=<pass:path|unknown_mod>\n", code: "EVE-103-302"},
-		{input: "KEY=<pass:path|>\n", code: "EVE-103-301"},
+		{input: "KEY=<pass://path|allow_tab,allow_tab>\n", code: "EVE-103-303"},
+		{input: "KEY=<pass://path|unknown_mod>\n", code: "EVE-103-302"},
+		{input: "KEY=<pass://path|>\n", code: "EVE-103-301"},
 	}
 	for _, tc := range cases {
 		_, err := parser.Parse(tc.input)
@@ -261,7 +261,7 @@ func TestParse_DuplicateOrUnknownModifier(t *testing.T) {
 
 // [EVT-MPU-1]
 func TestParse_AllowModifiersSpacing(t *testing.T) {
-	input := "KEY=<pass:path| allow_tab ,allow_newline >\n"
+	input := "KEY=<pass://path| allow_tab ,allow_newline >\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -275,7 +275,7 @@ func TestParse_AllowModifiersSpacing(t *testing.T) {
 
 // [EVT-MPU-1]
 func TestParse_PlaceholderDisallowsNewlineInBody(t *testing.T) {
-	input := "SECRET=<pass:path\nNEXT=value\n"
+	input := "SECRET=<pass://path\nNEXT=value\n"
 	_, err := parser.Parse(input)
 	perr := expectParseError(t, err, "EVE-103-202")
 	if perr.Line != 1 || perr.Column != 8 {
@@ -285,7 +285,7 @@ func TestParse_PlaceholderDisallowsNewlineInBody(t *testing.T) {
 
 // [EVT-MPU-1][EVT-MUU-1]
 func TestParse_PlaceholderDisallowsNULPath(t *testing.T) {
-	input := "SECRET=<pass:pa\x00th>\n"
+	input := "SECRET=<pass://pa\x00th>\n"
 	_, err := parser.Parse(input)
 	perr := expectParseError(t, err, "EVE-103-203")
 	if perr.Line != 1 || perr.Column != 8 {
@@ -295,7 +295,7 @@ func TestParse_PlaceholderDisallowsNULPath(t *testing.T) {
 
 // [EVT-MPU-3]
 func TestParse_ModifierNamesAreCaseSensitive(t *testing.T) {
-	input := "SECRET=<pass:path|Allow_tab>\n"
+	input := "SECRET=<pass://path|Allow_tab>\n"
 	_, err := parser.Parse(input)
 	perr := expectParseError(t, err, "EVE-103-302")
 	if perr.Line != 1 || perr.Column != 8 {
@@ -342,7 +342,7 @@ func TestParse_AssignmentNewlineVariants(t *testing.T) {
 // [EVT-MGU-3]
 func TestParse_AdditiveAndIndexedAssignments(t *testing.T) {
 	input := strings.Join([]string{
-		`TOTAL+=<pass:sum>`,
+		`TOTAL+=<pass://sum>`,
 		`ARRAY[1]="value"`,
 	}, "\n") + "\n"
 	elems, err := parser.Parse(input)
@@ -385,21 +385,21 @@ func TestParse_AssignmentOperatorAdjacency(t *testing.T) {
 	}{
 		{
 			name:     "AssignPlaceholderLiteral",
-			input:    `VAL=<pass:a>suffix`,
+			input:    `VAL=<pass://a>suffix`,
 			wantOps:  ast.OperatorAssign,
-			wantText: []string{"<pass:a>", "suffix"},
+			wantText: []string{"<pass://a>", "suffix"},
 		},
 		{
 			name:     "AppendLiteralPlaceholder",
-			input:    `LOG+=prefix<pass:entry>`,
+			input:    `LOG+=prefix<pass://entry>`,
 			wantOps:  ast.OperatorAppend,
-			wantText: []string{"prefix", "<pass:entry>"},
+			wantText: []string{"prefix", "<pass://entry>"},
 		},
 		{
 			name:     "IndexedPlaceholderAdjacency",
-			input:    `MAP[0]=<pass:key><pass:value>`,
+			input:    `MAP[0]=<pass://key><pass://value>`,
 			wantOps:  ast.OperatorAssign,
-			wantText: []string{"<pass:key>", "<pass:value>"},
+			wantText: []string{"<pass://key>", "<pass://value>"},
 		},
 	}
 	for _, tc := range cases {
@@ -448,8 +448,8 @@ func TestParse_ErrorReportsLineColumn(t *testing.T) {
 // [EVT-MPU-2][EVT-MPF-2]
 func TestParse_SigilViolationWhitespace(t *testing.T) {
 	inputs := []string{
-		"VAR=<pass :secret>\n",
-		"VAR=<pass\t:secret>\n",
+		"VAR=<pass ://secret>\n",
+		"VAR=<pass\t://secret>\n",
 	}
 	for _, in := range inputs {
 		_, err := parser.Parse(in)
@@ -462,7 +462,7 @@ func TestParse_SigilViolationWhitespace(t *testing.T) {
 
 // [EVT-MPU-5]
 func TestParse_Base64Modifier(t *testing.T) {
-	input := "TOKEN=<pass:secret|base64>\n"
+	input := "TOKEN=<pass://secret|base64>\n"
 	elems, err := parser.Parse(input)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
@@ -483,12 +483,12 @@ func TestParse_Base64CombinationAllowed(t *testing.T) {
 	}{
 		{
 			name:  "Base64ThenAllowTab",
-			input: "SECRET=<pass:path|base64,allow_tab>\n",
+			input: "SECRET=<pass://path|base64,allow_tab>\n",
 			want:  []string{"base64", "allow_tab"},
 		},
 		{
 			name:  "AllowNewlineThenBase64",
-			input: "SECRET=<pass:path|allow_newline,base64>\n",
+			input: "SECRET=<pass://path|allow_newline,base64>\n",
 			want:  []string{"allow_newline", "base64"},
 		},
 	}
@@ -527,35 +527,35 @@ func TestParse_PreservesTrailingWhitespace(t *testing.T) {
 
 // [EVT-MPU-1][EVT-MUU-1]
 func TestParse_PlaceholderDisallowsNULInModifiers(t *testing.T) {
-	input := "VAL=<pass:path|allo\x00w_tab>\n"
+	input := "VAL=<pass://path|allo\x00w_tab>\n"
 	_, err := parser.Parse(input)
 	expectParseError(t, err, "EVE-103-305")
 }
 
 // [EVT-MPU-1]
 func TestParse_PlaceholderRejectsNonASCIIWhitespaceAroundPath(t *testing.T) {
-	input := "VAL=<pass:\u00A0secret>\n"
+	input := "VAL=<pass://\u00A0secret>\n"
 	_, err := parser.Parse(input)
 	expectParseError(t, err, "EVE-103-204")
 }
 
 // [EVT-MPU-1]
 func TestParse_PlaceholderRejectsNonASCIIWhitespaceAroundSeparators_AfterPipe(t *testing.T) {
-	input := "VAL=<pass:path|\u00A0allow_tab>\n"
+	input := "VAL=<pass://path|\u00A0allow_tab>\n"
 	_, err := parser.Parse(input)
 	expectParseError(t, err, "EVE-103-1")
 }
 
 // [EVT-MPU-1]
 func TestParse_PlaceholderRejectsNonASCIIWhitespaceAroundSeparators_CommaAdjacency(t *testing.T) {
-	input := "VAL=<pass:path|allow_tab,\u00A0allow_newline>\n"
+	input := "VAL=<pass://path|allow_tab,\u00A0allow_newline>\n"
 	_, err := parser.Parse(input)
 	expectParseError(t, err, "EVE-103-1")
 }
 
 // [EVT-MPU-1]
 func TestParse_PlaceholderRejectsNonASCIIWhitespaceBeforeClose(t *testing.T) {
-	input := "VAL=<pass:path|allow_tab\u00A0>\n"
+	input := "VAL=<pass://path|allow_tab\u00A0>\n"
 	_, err := parser.Parse(input)
 	expectParseError(t, err, "EVE-103-1")
 }
@@ -565,6 +565,31 @@ func TestParse_AssignmentNameMismatchedBrackets(t *testing.T) {
 	input := "APP_NAME[0=staging\n"
 	_, err := parser.Parse(input)
 	expectParseError(t, err, "EVE-103-501")
+}
+
+// [EVT-MPF-2]
+func TestParse_LegacyPlaceholderSyntaxRejected(t *testing.T) {
+	input := "VAR=<pass:legacy>\n"
+	_, err := parser.Parse(input)
+	perr := expectParseError(t, err, "EVE-103-4")
+	if perr.Line != 1 {
+		t.Fatalf("error line = %d, want 1", perr.Line)
+	}
+	if perr.Column <= 6 {
+		t.Fatalf("error column = %d, want to point near '<pass' sigil", perr.Column)
+	}
+}
+
+// [EVT-MPF-6]
+func TestParse_PlaceholderRejectsInvalidIRIPath(t *testing.T) {
+	cases := []string{
+		"VAR=<pass://host?query>\n",
+		"VAR=<pass://host#fragment>\n",
+	}
+	for _, in := range cases {
+		_, err := parser.Parse(in)
+		expectParseError(t, err, "EVE-103-206")
+	}
 }
 
 func findFirstPlaceholder(tokens []ast.ValueToken) *ast.ValueToken {

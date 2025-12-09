@@ -110,12 +110,12 @@ Print the EnvSeed version string.
 - Exit code is always `0`.
 
 ## Template Language
-Placeholders have the form `<pass:PATH>` or `<pass:PATH|modifier[, modifier...]>`.
+Placeholders have the form `<pass://PATH>` or `<pass://PATH|modifier[, modifier...]>`.
 Placeholders appear on the right-hand side of assignment lines and may be placed inside any of the supported contexts.
 EnvSeed detects the surrounding context and renders the secret with minimal, context-appropriate escaping before writing the `.env` file.
 
 ```sh
-PASSWORD='<pass:www.example.com/password>'
+PASSWORD='<pass://www.example.com/password>'
 ```
 
 For detailed rules on placeholders and modifiers, see spec/05-rendering.md and spec/04-parsing.md.

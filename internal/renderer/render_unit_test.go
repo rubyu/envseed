@@ -17,7 +17,7 @@ import (
 
 // [EVT-MEU-1]
 func TestRender_BareSimple(t *testing.T) {
-	input := "EXAMPLE_VAR=<pass:example>\n"
+	input := "EXAMPLE_VAR=<pass://example>\n"
 	got, err := renderer.RenderString(input, externalResolver{"example": "abc123"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -29,7 +29,7 @@ func TestRender_BareSimple(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_BareAutoEscapes(t *testing.T) {
-	input := "EXAMPLE_VAR=<pass:example>\n"
+	input := "EXAMPLE_VAR=<pass://example>\n"
 	got, err := renderer.RenderString(input, externalResolver{"example": "hello world"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -42,7 +42,7 @@ func TestRender_BareAutoEscapes(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_BareEscapesSpecialCharacters(t *testing.T) {
-	input := "SPECIAL=<pass:example>\n"
+	input := "SPECIAL=<pass://example>\n"
 	secret := "$value#(test)\\"
 	got, err := renderer.RenderString(input, externalResolver{"example": secret})
 	if err != nil {
@@ -56,7 +56,7 @@ func TestRender_BareEscapesSpecialCharacters(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_DoubleQuotedEscaping(t *testing.T) {
-	input := "EXAMPLE_VAR=\"pre <pass:example> post\"\n"
+	input := "EXAMPLE_VAR=\"pre <pass://example> post\"\n"
 	got, err := renderer.RenderString(input, externalResolver{"example": `he"llo$`})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -69,7 +69,7 @@ func TestRender_DoubleQuotedEscaping(t *testing.T) {
 
 // [EVT-MWP-4]
 func TestRender_DoubleQuotedAllowNewline(t *testing.T) {
-	input := "EXAMPLE_VAR=\"<pass:example|allow_newline>\"\n"
+	input := "EXAMPLE_VAR=\"<pass://example|allow_newline>\"\n"
 	got, err := renderer.RenderString(input, externalResolver{"example": "line1\nline2"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -82,7 +82,7 @@ func TestRender_DoubleQuotedAllowNewline(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRenderStringExternal(t *testing.T) {
-	out, err := renderer.RenderString("API_KEY=<pass:api_key>\n", externalResolver{"api_key": "s3cr3t"})
+	out, err := renderer.RenderString("API_KEY=<pass://api_key>\n", externalResolver{"api_key": "s3cr3t"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestRenderStringExternal(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_CommandSubstitutionEscapes(t *testing.T) {
-	input := "CMD=$(echo <pass:val|allow_newline>)\n"
+	input := "CMD=$(echo <pass://val|allow_newline>)\n"
 	got, err := renderer.RenderString(input, externalResolver{"val": "value)\nnext"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -113,7 +113,7 @@ func TestRender_CommandSubstitutionEscapes(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_BacktickError(t *testing.T) {
-	input := "STAMP=`echo <pass:token>`\n"
+	input := "STAMP=`echo <pass://token>`\n"
 	// With only a trailing newline, normalization removes it and no error occurs.
 	out, err := renderer.RenderString(input, externalResolver{"token": "line1\n"})
 	if err != nil {
@@ -129,7 +129,7 @@ func TestRender_BacktickError(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_SingleQuotedAllowsSimpleValue(t *testing.T) {
-	input := "RAW='<pass:secret>'\n"
+	input := "RAW='<pass://secret>'\n"
 	out, err := renderer.RenderString(input, externalResolver{"secret": "value"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -141,21 +141,21 @@ func TestRender_SingleQuotedAllowsSimpleValue(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_SingleQuotedRejectsQuote(t *testing.T) {
-	input := "RAW='<pass:secret>'\n"
+	input := "RAW='<pass://secret>'\n"
 	_, err := renderer.RenderString(input, externalResolver{"secret": "O'Connor"})
 	expectPlaceholderError(t, err, "EVE-105-101")
 }
 
 // [EVT-MWP-4]
 func TestRender_SingleQuotedRejectsNewline(t *testing.T) {
-	input := "RAW='<pass:secret>'\n"
+	input := "RAW='<pass://secret>'\n"
 	_, err := renderer.RenderString(input, externalResolver{"secret": "line1\nline2"})
 	expectPlaceholderError(t, err, "EVE-105-102")
 }
 
 // [EVT-MWP-3]
 func TestRender_SingleQuotedTabHandling(t *testing.T) {
-	base := "RAW='<pass:secret%s>'\n"
+	base := "RAW='<pass://secret%s>'\n"
 	secret := "hello\tworld"
 
 	_, err := renderer.RenderString(fmt.Sprintf(base, ""), externalResolver{"secret": secret})
@@ -172,14 +172,14 @@ func TestRender_SingleQuotedTabHandling(t *testing.T) {
 
 // [EVT-MUU-1]
 func TestRender_SingleQuotedRejectsControlCharacter(t *testing.T) {
-	input := "RAW='<pass:secret>'\n"
+	input := "RAW='<pass://secret>'\n"
 	_, err := renderer.RenderString(input, externalResolver{"secret": "ping\x07"})
 	expectPlaceholderError(t, err, "EVE-105-104")
 }
 
 // [EVT-MWP-4]
 func TestRender_SingleQuotedRejectsAllowNewlineModifier(t *testing.T) {
-	input := "RAW='<pass:secret|allow_newline>'\n"
+	input := "RAW='<pass://secret|allow_newline>'\n"
 	_, err := renderer.RenderString(input, externalResolver{"secret": "value"})
 	expectPlaceholderError(t, err, "EVE-105-105")
 }
@@ -197,7 +197,7 @@ func TestEOFNormalization_Unit(t *testing.T) {
 		{"no_trailing", "abc", "abc"},
 	} {
 		t.Run("bare/"+tc.name, func(t *testing.T) {
-			input := "VAL=<pass:pv>\n"
+			input := "VAL=<pass://pv>\n"
 			out, err := renderer.RenderString(input, externalResolver{"pv": tc.secret})
 			if err != nil {
 				t.Fatalf("render: %v", err)
@@ -222,7 +222,7 @@ func TestEOFNormalization_Unit(t *testing.T) {
 		{"mixed_lf_crlf", "x\n\r\n", "x\n"},
 	} {
 		t.Run("double-allow-newline/"+tc.name, func(t *testing.T) {
-			input := "VAL=\"<pass:pv|allow_newline>\"\n"
+			input := "VAL=\"<pass://pv|allow_newline>\"\n"
 			out, err := renderer.RenderString(input, externalResolver{"pv": tc.secret})
 			if err != nil {
 				t.Fatalf("render: %v", err)
@@ -238,7 +238,7 @@ func TestEOFNormalization_Unit(t *testing.T) {
 // [EVT-MWP-7] Normalization × strip-family/order (Sections 5.1, 5.2)
 func TestNormalizationOrder_WithStrip(t *testing.T) {
 	// Value "X\n " should normalize to "X " then strip_right → "X".
-	input := "VAL=<pass:pv|strip_right>\n"
+	input := "VAL=<pass://pv|strip_right>\n"
 	out, err := renderer.RenderString(input, externalResolver{"pv": "X\n "})
 	if err != nil {
 		t.Fatalf("render: %v", err)
@@ -248,7 +248,7 @@ func TestNormalizationOrder_WithStrip(t *testing.T) {
 	}
 
 	// CRLF then TAB: normalize CRLF → leave TAB for strip_right.
-	input = "VAL=<pass:pv|strip_right>\n"
+	input = "VAL=<pass://pv|strip_right>\n"
 	out, err = renderer.RenderString(input, externalResolver{"pv": "X\r\n\t"})
 	if err != nil {
 		t.Fatalf("render: %v", err)
@@ -258,7 +258,7 @@ func TestNormalizationOrder_WithStrip(t *testing.T) {
 	}
 
 	// Internal newline must not be removed by normalization; strip_right does not remove it.
-	input = "VAL=\"<pass:pv|strip_right,allow_newline>\"\n"
+	input = "VAL=\"<pass://pv|strip_right,allow_newline>\"\n"
 	out, err = renderer.RenderString(input, externalResolver{"pv": "A\nB\n"})
 	if err != nil {
 		t.Fatalf("render: %v", err)
@@ -271,7 +271,7 @@ func TestNormalizationOrder_WithStrip(t *testing.T) {
 // [EVT-MWP-8] Normalization × contexts (Sections 5.1, 5.3)
 func TestNormalization_ContextIndependence_DoubleQuoted(t *testing.T) {
 	// Trailing-only newline is removed without needing allow_newline.
-	input := "VAL=\"<pass:pv>\"\n"
+	input := "VAL=\"<pass://pv>\"\n"
 	out, err := renderer.RenderString(input, externalResolver{"pv": "T\n"})
 	if err != nil {
 		t.Fatalf("render: %v", err)
@@ -281,7 +281,7 @@ func TestNormalization_ContextIndependence_DoubleQuoted(t *testing.T) {
 	}
 
 	// Internal newline remains and requires allow_newline.
-	input = "VAL=\"<pass:pv>\"\n"
+	input = "VAL=\"<pass://pv>\"\n"
 	_, err = renderer.RenderString(input, externalResolver{"pv": "T\nU"})
 	if err == nil {
 		t.Fatalf("want error for internal newline without allow_newline")
@@ -290,7 +290,7 @@ func TestNormalization_ContextIndependence_DoubleQuoted(t *testing.T) {
 
 // [EVT-MWP-3]
 func TestRender_StripRightRemovesTrailingNewline(t *testing.T) {
-	input := "TOKEN=<pass:secret|strip_right>\n"
+	input := "TOKEN=<pass://secret|strip_right>\n"
 	got, err := renderer.RenderString(input, externalResolver{"secret": "value\n"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -303,7 +303,7 @@ func TestRender_StripRightRemovesTrailingNewline(t *testing.T) {
 
 // [EVT-MWP-3]
 func TestRender_StripLeftRemovesLeadingWhitespace(t *testing.T) {
-	input := "VAL=\"<pass:secret|strip_left>\"\n"
+	input := "VAL=\"<pass://secret|strip_left>\"\n"
 	got, err := renderer.RenderString(input, externalResolver{"secret": "\t\n trimmed"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -316,7 +316,7 @@ func TestRender_StripLeftRemovesLeadingWhitespace(t *testing.T) {
 
 // [EVT-MWP-3]
 func TestRender_StripRemovesBothSides(t *testing.T) {
-	input := "VAL=\"<pass:secret|strip>\"\n"
+	input := "VAL=\"<pass://secret|strip>\"\n"
 	got, err := renderer.RenderString(input, externalResolver{"secret": "\r\n spaced value \n"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -343,87 +343,87 @@ func TestRender_CRLFAllowance(t *testing.T) {
 	}{
 		{
 			name:        "DoubleQuotedAllowCRLF",
-			template:    "VAL=\"<pass:secret|allow_newline>\"\n",
+			template:    "VAL=\"<pass://secret|allow_newline>\"\n",
 			secret:      crlf,
 			verifyParse: true,
 		},
 		{
 			name:        "DoubleQuotedAllowCR",
-			template:    "VAL=\"<pass:secret|allow_newline>\"\n",
+			template:    "VAL=\"<pass://secret|allow_newline>\"\n",
 			secret:      cr,
 			verifyParse: true,
 		},
 		{
 			name:      "DoubleQuotedRejectCRLF",
-			template:  "VAL=\"<pass:secret>\"\n",
+			template:  "VAL=\"<pass://secret>\"\n",
 			secret:    crlf,
 			expectErr: true,
 			code:      "EVE-105-201",
 		},
 		{
 			name:      "DoubleQuotedRejectCR",
-			template:  "VAL=\"<pass:secret>\"\n",
+			template:  "VAL=\"<pass://secret>\"\n",
 			secret:    cr,
 			expectErr: true,
 			code:      "EVE-105-201",
 		},
 		{
 			name:        "CommandSubstitutionAllowCRLF",
-			template:    "VAL=$(echo <pass:secret|allow_newline>)\n",
+			template:    "VAL=$(echo <pass://secret|allow_newline>)\n",
 			secret:      crlf,
 			verifyParse: true,
 		},
 		{
 			name:        "CommandSubstitutionAllowCR",
-			template:    "VAL=$(echo <pass:secret|allow_newline>)\n",
+			template:    "VAL=$(echo <pass://secret|allow_newline>)\n",
 			secret:      cr,
 			verifyParse: true,
 		},
 		{
 			name:      "CommandSubstitutionRejectCRLF",
-			template:  "VAL=$(echo <pass:secret>)\n",
+			template:  "VAL=$(echo <pass://secret>)\n",
 			secret:    crlf,
 			expectErr: true,
 			code:      "EVE-105-301",
 		},
 		{
 			name:      "CommandSubstitutionRejectCR",
-			template:  "VAL=$(echo <pass:secret>)\n",
+			template:  "VAL=$(echo <pass://secret>)\n",
 			secret:    cr,
 			expectErr: true,
 			code:      "EVE-105-301",
 		},
 		{
 			name:      "BareRejectsAllowNewlineModifier",
-			template:  "VAL=<pass:secret|allow_newline>\n",
+			template:  "VAL=<pass://secret|allow_newline>\n",
 			secret:    crlf,
 			expectErr: true,
 			code:      "EVE-105-504",
 		},
 		{
 			name:      "SingleQuotedRejectsNewlines",
-			template:  "VAL='<pass:secret>'\n",
+			template:  "VAL='<pass://secret>'\n",
 			secret:    crlf,
 			expectErr: true,
 			code:      "EVE-105-102",
 		},
 		{
 			name:      "BacktickRejectsAllowNewlineModifier",
-			template:  "VAL=`echo <pass:secret|allow_newline>`\n",
+			template:  "VAL=`echo <pass://secret|allow_newline>`\n",
 			secret:    crlf,
 			expectErr: true,
 			code:      "EVE-105-404",
 		},
 		{
 			name:      "BareRejectsLF",
-			template:  "VAL=<pass:secret|allow_newline>\n",
+			template:  "VAL=<pass://secret|allow_newline>\n",
 			secret:    lf,
 			expectErr: true,
 			code:      "EVE-105-504",
 		},
 		{
 			name:      "CommandSubstitutionRejectLFWithoutModifier",
-			template:  "VAL=$(echo <pass:secret>)\n",
+			template:  "VAL=$(echo <pass://secret>)\n",
 			secret:    lf,
 			expectErr: true,
 			code:      "EVE-105-301",
@@ -453,9 +453,9 @@ func TestRender_CRLFAllowance(t *testing.T) {
 // [EVT-MUP-1]
 func TestRender_InvalidModifierCombination(t *testing.T) {
 	inputs := []string{
-		"VAL=<pass:secret|base64,strip>\n",
-		"VAL=<pass:secret|base64,strip_left>\n",
-		"VAL=<pass:secret|base64,strip_right>\n",
+		"VAL=<pass://secret|base64,strip>\n",
+		"VAL=<pass://secret|base64,strip_left>\n",
+		"VAL=<pass://secret|base64,strip_right>\n",
 	}
 	for _, input := range inputs {
 		_, err := renderer.RenderString(input, externalResolver{"secret": "value"})
@@ -474,19 +474,19 @@ func TestRender_Base64InvalidCombinations(t *testing.T) {
 	}{
 		{
 			name:     "AllowTab",
-			template: "VAL=<pass:secret|base64,allow_tab>\n",
+			template: "VAL=<pass://secret|base64,allow_tab>\n",
 			secret:   "value",
 			code:     "EVE-105-601",
 		},
 		{
 			name:     "AllowNewline",
-			template: "VAL=\"<pass:secret|base64,allow_newline>\"\n",
+			template: "VAL=\"<pass://secret|base64,allow_newline>\"\n",
 			secret:   "value",
 			code:     "EVE-105-601",
 		},
 		{
 			name:     "BothAllow",
-			template: "VAL=\"<pass:secret|base64,allow_tab,allow_newline>\"\n",
+			template: "VAL=\"<pass://secret|base64,allow_tab,allow_newline>\"\n",
 			secret:   "value",
 			code:     "EVE-105-601",
 		},
@@ -504,7 +504,7 @@ func TestRender_Base64InvalidCombinations(t *testing.T) {
 func TestRender_BareBase64SpecialCharacters(t *testing.T) {
 	t.Helper()
 	resolver := externalResolver{"secret": string([]byte{0xfb, 0xfe})}
-	out, err := renderer.RenderString("VAL=<pass:secret|base64>\n", resolver)
+	out, err := renderer.RenderString("VAL=<pass://secret|base64>\n", resolver)
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
 	}
@@ -521,7 +521,7 @@ func TestRender_BareBase64SpecialCharacters(t *testing.T) {
 
 // [EVT-MPP-2]
 func TestRender_DangerouslyBypass(t *testing.T) {
-	input := "EXAMPLE_VAR=<pass:example|dangerously_bypass_escape>\n"
+	input := "EXAMPLE_VAR=<pass://example|dangerously_bypass_escape>\n"
 	got, err := renderer.RenderString(input, externalResolver{"example": "a b$c"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -534,7 +534,7 @@ func TestRender_DangerouslyBypass(t *testing.T) {
 
 // [EVT-MPP-2]
 func TestRender_DangerouslyBypassSkipsReparse(t *testing.T) {
-	input := "VAR=<pass:secret|dangerously_bypass_escape>\n"
+	input := "VAR=<pass://secret|dangerously_bypass_escape>\n"
 	secret := "\n=oops"
 	got, err := renderer.RenderString(input, externalResolver{"secret": secret})
 	if err != nil {
@@ -562,7 +562,7 @@ func TestRender_MultiLevelEvaluation(t *testing.T) {
 		t.Skip("bubblewrap sandbox unavailable")
 	}
 
-	input := strings.ReplaceAll(`OUT=$(printf "%s|%s|%s" "$(printf %s "<pass:alpha>")" "$(printf %s "$(printf %s "<pass:beta>")")" "{{BT}}printf %s "<pass:gamma>"{{BT}}")`+"\n", "{{BT}}", "`")
+	input := strings.ReplaceAll(`OUT=$(printf "%s|%s|%s" "$(printf %s "<pass://alpha>")" "$(printf %s "$(printf %s "<pass://beta>")")" "{{BT}}printf %s "<pass://gamma>"{{BT}}")`+"\n", "{{BT}}", "`")
 
 	resolver := externalResolver{
 		"alpha": "LEVEL-A",
@@ -585,7 +585,7 @@ func TestRender_MultiLevelEvaluation(t *testing.T) {
 
 // [EVT-MWP-3]
 func TestRender_AllowTabBare(t *testing.T) {
-	input := "EXAMPLE_VAR=<pass:example|allow_tab>\n"
+	input := "EXAMPLE_VAR=<pass://example|allow_tab>\n"
 	got, err := renderer.RenderString(input, externalResolver{"example": "a\tb"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -598,7 +598,7 @@ func TestRender_AllowTabBare(t *testing.T) {
 
 // [EVT-MEP-3]
 func TestRender_RoundTripAndBash(t *testing.T) {
-	input := "# header\nEXAMPLE_VAR=\"value <pass:example|allow_tab>\"\nNOTES=$(echo <pass:multiline_note|allow_newline>)\n"
+	input := "# header\nEXAMPLE_VAR=\"value <pass://example|allow_tab>\"\nNOTES=$(echo <pass://multiline_note|allow_newline>)\n"
 	rendered, err := renderer.RenderString(input, externalResolver{
 		"example":        "a\tb",
 		"multiline_note": "line1\nline2",
@@ -616,7 +616,7 @@ func TestRender_RoundTripAndBash(t *testing.T) {
 
 // [EVT-MPP-3]
 func TestRender_Base64Bare(t *testing.T) {
-	input := "TOKEN=<pass:secret|base64>\n"
+	input := "TOKEN=<pass://secret|base64>\n"
 	secret := "\xff"
 	rendered, err := renderer.RenderString(input, externalResolver{"secret": secret})
 	if err != nil {
@@ -633,7 +633,7 @@ func TestRender_Base64Bare(t *testing.T) {
 func TestRender_BareEscapesExtendedSet(t *testing.T) {
 	t.Helper()
 	// Extended always-escape characters in Bare: |, &, ;, <, >
-	input := "EXT=<pass:secret>\n"
+	input := "EXT=<pass://secret>\n"
 	secret := "|&;<>"
 	got, err := renderer.RenderString(input, externalResolver{"secret": secret})
 	if err != nil {
@@ -649,7 +649,7 @@ func TestRender_BareEscapesExtendedSet(t *testing.T) {
 func TestRender_BareAdjacencyWithExtendedEscapes(t *testing.T) {
 	t.Helper()
 	// Adjacency to surrounding literals; extended escapes preserved with backslashes
-	input := "X=pre<pass:secret>suf\n"
+	input := "X=pre<pass://secret>suf\n"
 	secret := "|&;<>"
 	got, err := renderer.RenderString(input, externalResolver{"secret": secret})
 	if err != nil {
@@ -663,7 +663,7 @@ func TestRender_BareAdjacencyWithExtendedEscapes(t *testing.T) {
 
 // [EVT-MPP-3]
 func TestRender_Base64BareAllowsPaddingAndSlash(t *testing.T) {
-	input := "TOKEN=<pass:secret|base64>\n"
+	input := "TOKEN=<pass://secret|base64>\n"
 	secret := "\xff\xef"
 	rendered, err := renderer.RenderString(input, externalResolver{"secret": secret})
 	if err != nil {
@@ -681,7 +681,7 @@ func TestRender_Base64BareAllowsPaddingAndSlash(t *testing.T) {
 
 // [EVT-MPP-3]
 func TestRender_Base64DoubleQuoted(t *testing.T) {
-	input := `TOKEN="<pass:secret|base64>"` + "\n"
+	input := `TOKEN="<pass://secret|base64>"` + "\n"
 	secret := "raw value"
 	rendered, err := renderer.RenderString(input, externalResolver{"secret": secret})
 	if err != nil {
@@ -696,7 +696,7 @@ func TestRender_Base64DoubleQuoted(t *testing.T) {
 
 // [EVT-MEP-1]
 func TestRender_BareMultiplePlaceholders(t *testing.T) {
-	input := "EXAMPLE_VAR=<pass:a><pass:b>\n"
+	input := "EXAMPLE_VAR=<pass://a><pass://b>\n"
 	rendered, err := renderer.RenderString(input, externalResolver{"a": "one", "b": "two"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -708,7 +708,7 @@ func TestRender_BareMultiplePlaceholders(t *testing.T) {
 
 // [EVT-MEP-1]
 func TestRender_BareMultiplePlaceholdersSanitized(t *testing.T) {
-	input := "EXAMPLE_VAR=<pass:a><pass:b>\n"
+	input := "EXAMPLE_VAR=<pass://a><pass://b>\n"
 	rendered, err := renderer.RenderString(input, externalResolver{"a": "ok", "b": ";rm -rf"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -721,7 +721,7 @@ func TestRender_BareMultiplePlaceholdersSanitized(t *testing.T) {
 
 // [EVT-MEP-1]
 func TestRender_PrefixSuffixInjectionGuard(t *testing.T) {
-	input := "EXAMPLE_VAR=prefix<pass:a>suffix\n"
+	input := "EXAMPLE_VAR=prefix<pass://a>suffix\n"
 	rendered, err := renderer.RenderString(input, externalResolver{"a": " value"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -734,7 +734,7 @@ func TestRender_PrefixSuffixInjectionGuard(t *testing.T) {
 
 // [EVT-MEU-1]
 func TestRender_CommandBoundaryEscaping(t *testing.T) {
-	input := "CMD=$(printf %s <pass:a|allow_newline>)\n"
+	input := "CMD=$(printf %s <pass://a|allow_newline>)\n"
 	rendered, err := renderer.RenderString(input, externalResolver{"a": "middle)more"})
 	if err != nil {
 		t.Fatalf("RenderString error: %v", err)
@@ -755,7 +755,7 @@ func TestRender_BoundaryMatrix(t *testing.T) {
 	}{
 		{
 			name:  "BareAdjacentPlaceholders",
-			input: "EXAMPLE_VAR=<pass:a><pass:b>\n",
+			input: "EXAMPLE_VAR=<pass://a><pass://b>\n",
 			resolver: externalResolver{
 				"a": "one",
 				"b": "two",
@@ -764,13 +764,13 @@ func TestRender_BoundaryMatrix(t *testing.T) {
 		},
 		{
 			name:     "BareSecretAutoEscapes",
-			input:    "EXAMPLE_VAR=<pass:a>\n",
+			input:    "EXAMPLE_VAR=<pass://a>\n",
 			resolver: externalResolver{"a": "needs space"},
 			want:     "EXAMPLE_VAR=needs\\ space\n",
 		},
 		{
 			name:  "DoubleQuotedBoundary",
-			input: "EXAMPLE_VAR=\"[<pass:a>]<pass:b>\"\n",
+			input: "EXAMPLE_VAR=\"[<pass://a>]<pass://b>\"\n",
 			resolver: externalResolver{
 				"a": "left]",
 				"b": "right",
@@ -779,20 +779,20 @@ func TestRender_BoundaryMatrix(t *testing.T) {
 		},
 		{
 			name:     "CommandClosingParen",
-			input:    "CMD=$(printf %s <pass:a>)\n",
+			input:    "CMD=$(printf %s <pass://a>)\n",
 			resolver: externalResolver{"a": "value)tail"},
 			want:     "CMD=$(printf %s value\\)tail)\n",
 		},
 		{
 			name:     "BarePlaceholderBeforeComment",
-			input:    "VALUE=<pass:a> # comment\n",
+			input:    "VALUE=<pass://a> # comment\n",
 			resolver: externalResolver{"a": "ok"},
 			want:     "VALUE=ok # comment\n",
 			verify:   true,
 		},
 		{
 			name:  "DoubleQuotedAdjacentPlaceholders",
-			input: "VAL=\"<pass:a><pass:b>\"\n",
+			input: "VAL=\"<pass://a><pass://b>\"\n",
 			resolver: externalResolver{
 				"a": "one",
 				"b": "two",
@@ -802,7 +802,7 @@ func TestRender_BoundaryMatrix(t *testing.T) {
 		},
 		{
 			name:  "CommandSubstitutionAdjacentPlaceholders",
-			input: "CMD=$(printf %s <pass:a><pass:b>)\n",
+			input: "CMD=$(printf %s <pass://a><pass://b>)\n",
 			resolver: externalResolver{
 				"a": "left",
 				"b": "right",
@@ -841,7 +841,7 @@ func TestRender_ModifierErrors(t *testing.T) {
 	}{
 		{
 			name:  "BareAllowNewlineUnsupported",
-			input: "VAL=<pass:secret|allow_newline>\n",
+			input: "VAL=<pass://secret|allow_newline>\n",
 			resolver: externalResolver{
 				"secret": "line1\nline2",
 			},
@@ -849,7 +849,7 @@ func TestRender_ModifierErrors(t *testing.T) {
 		},
 		{
 			name:  "BacktickAllowNewlineUnsupported",
-			input: "VAL=`printf %s <pass:secret|allow_newline>`\n",
+			input: "VAL=`printf %s <pass://secret|allow_newline>`\n",
 			resolver: externalResolver{
 				"secret": "line1\nline2",
 			},
@@ -857,7 +857,7 @@ func TestRender_ModifierErrors(t *testing.T) {
 		},
 		{
 			name:  "DoubleQuotedTabMissingModifier",
-			input: "VAL=\"<pass:secret>\"\n",
+			input: "VAL=\"<pass://secret>\"\n",
 			resolver: externalResolver{
 				"secret": "tab\tvalue",
 			},
@@ -865,7 +865,7 @@ func TestRender_ModifierErrors(t *testing.T) {
 		},
 		{
 			name:  "CommandSubstitutionTabMissingModifier",
-			input: "CMD=$(printf %s <pass:secret>)\n",
+			input: "CMD=$(printf %s <pass://secret>)\n",
 			resolver: externalResolver{
 				"secret": "tab\tcommand",
 			},
@@ -873,7 +873,7 @@ func TestRender_ModifierErrors(t *testing.T) {
 		},
 		{
 			name:  "CommandSubstitutionNewlineMissingModifier",
-			input: "CMD=$(printf %s <pass:secret>)\n",
+			input: "CMD=$(printf %s <pass://secret>)\n",
 			resolver: externalResolver{
 				"secret": "line1\nline2",
 			},
@@ -893,10 +893,10 @@ func TestRender_ModifierErrors(t *testing.T) {
 // [EVT-MEP-3]
 func TestRender_RealisticScenario(t *testing.T) {
 	input := `# Example service configuration
-API_ENDPOINT="https://<pass:host>/v1"
-AUTH_HEADER="Bearer <pass:key>"
-SCRIPT=$(printf "%s" "<pass:script|allow_newline>")
-MESSAGE="<pass:message|allow_tab>"
+API_ENDPOINT="https://<pass://host>/v1"
+AUTH_HEADER="Bearer <pass://key>"
+SCRIPT=$(printf "%s" "<pass://script|allow_newline>")
+MESSAGE="<pass://message|allow_tab>"
 `
 	resolver := externalResolver{
 		"host":    "internal.example.org",
